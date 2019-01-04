@@ -21,6 +21,7 @@
 @property (nonatomic, strong) NSString *password;
 @property (nonatomic, strong) NSString *code;
 @property (nonatomic) BOOL registerOnAdd;
+@property (nonatomic) BOOL noRegister;
 @property (nonatomic) BOOL publishEnabled;
 @property (nonatomic, assign) CGSize outputVideoSize;
 @property (nonatomic, assign) NSInteger registrationTimeout;

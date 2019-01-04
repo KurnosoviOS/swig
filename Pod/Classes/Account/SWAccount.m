@@ -180,7 +180,7 @@ void * refToSelf;
         [[SWEndpoint sharedEndpoint] addAccount:self];
     }
     
-    if (!self.accountConfiguration.registerOnAdd) {
+    if (!(self.accountConfiguration.registerOnAdd || self.accountConfiguration.noRegister)) {
         [self connect:handler];
     } else {
         if (handler) {
