@@ -81,7 +81,7 @@
 
     pj_pool_release(tempPool);
     
-    return [NSString stringWithFormat:@"<%@>", [NSString stringWithPJString:new_contact]];
+    return [NSString stringWithFormat:@"<%@:%d>", [NSString stringWithPJString:new_contact], local_sip_uri->port];
 }
 
 

@@ -323,6 +323,10 @@ void * refToSelf;
 
 -(void)connect:(void(^)(NSError *error))handler {
     
+    if (self.accountConfiguration.noRegister) {
+        return;
+    }
+    
     //FIX: registering too often will cause the server to possibly return error
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
         pj_status_t status;
@@ -370,6 +374,10 @@ void * refToSelf;
 
 - (pj_status_t) requestRegisterState: (pj_bool_t) state {
     
+    if (self.accountConfiguration.noRegister) {
+        return PJ_SUCCESS;
+    }
+    
     if (self.isAuthorized) {
         self.neededRegisterState = state;
     }
@@ -401,6 +409,10 @@ void * refToSelf;
 }
 
 - (void) requestThreadedRegisterState: (pj_bool_t) state withCompletion: (void(^)(pj_status_t status))handler {
+    
+    if (self.accountConfiguration.noRegister) {
+        return;
+    }
     
     if (self.isAuthorized) {
         self.neededRegisterState = state;
