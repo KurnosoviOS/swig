@@ -15,7 +15,7 @@
 #import "SWCall.h"
 #import "pjsua.h"
 #import "NSString+PJString.h"
-#import <AFNetworkReachabilityManager.h>
+#import <AFNetworking/AFNetworkReachabilityManager.h>
 #import <AVFoundation/AVFoundation.h>
 #import <AudioToolbox/AudioToolbox.h>
 
