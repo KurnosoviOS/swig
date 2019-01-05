@@ -9,7 +9,7 @@
 
 Pod::Spec.new do |s|
   s.name             = "Swig"
-  s.version          = "0.4.0"
+  s.version          = "0.4.1"
   s.summary          = "PJSIP Wrapper for ios"
   s.description      = <<-DESC
                        Simplifing the use of pjsip on ios
@@ -27,6 +27,7 @@ Pod::Spec.new do |s|
   s.source_files = 'Pod/Classes/**/*{c,h,m}', 'Pod/SoundSwitch/*{h,m}'
   s.preserve_paths = 'Pod/Classes/**/*{c,h,m}', 'Pod/SoundSwitch/*{h,m}', 'Pod/openfec/include/**/*{h}', 'Pod/openfec/lib/*{a}'
 
+  spec.ios.library = 'Pod/openfec/lib/*.a'
   s.vendored_libraries = 'Pod/openfec/lib/*.a'
   s.vendored_libraries = '../pjsip-ios/Pod/pjsip-lib/*.a'
 
