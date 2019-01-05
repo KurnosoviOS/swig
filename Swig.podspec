@@ -27,8 +27,8 @@ Pod::Spec.new do |s|
   s.source_files = 'Pod/Classes/**/*{c,h,m}', 'Pod/SoundSwitch/*{h,m}'
   s.preserve_paths = 'Pod/Classes/**/*{c,h,m}', 'Pod/SoundSwitch/*{h,m}', 'Pod/openfec/include/**/*{h}', 'Pod/openfec/lib/*{a}'
 
-  s.ios.library = 'Pod/openfec/lib/*.a'
   s.vendored_libraries = 'Pod/openfec/lib/*.a'
+  s.ios.vendored_libraries = 'Pod/openfec/lib/libopenfec.a'
   s.vendored_libraries = '../pjsip-ios/Pod/pjsip-lib/*.a'
 
   s.dependency 'AFNetworking/Reachability', '~> 3'
