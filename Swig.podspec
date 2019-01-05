@@ -25,7 +25,7 @@ Pod::Spec.new do |s|
 
   s.resources = 'Pod/Assets/*', 'Pod/SoundSwitch/*.caf'
   s.source_files = 'Pod/Classes/**/*{c,h,m}', 'Pod/SoundSwitch/*{h,m}'
-  s.preserve_paths = 'Pod/Classes/**/*{c,h,m}', 'Pod/SoundSwitch/*{h,m}', 'Pod/openfec/include/**/*{h}'
+  s.preserve_paths = 'Pod/Classes/**/*{c,h,m}', 'Pod/SoundSwitch/*{h,m}', 'Pod/openfec/include/**/*{h}', 'Pod/openfec/lib/*{a}'
 
   s.vendored_libraries = 'Pod/openfec/lib/*.a'
   s.vendored_libraries = '$(PODS_ROOT)/pjsip-ios/Pod/pjsip-lib/*.a'
