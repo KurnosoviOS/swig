@@ -28,12 +28,14 @@ Pod::Spec.new do |s|
   s.preserve_paths = 'Pod/Classes/**/*{c,h,m}', 'Pod/SoundSwitch/*{h,m}', 'Pod/openfec/include/**/*{h}', 'Pod/openfec/lib/*{a}'
 
   s.vendored_libraries = 'Pod/openfec/lib/*.a'
-  s.vendored_libraries = '$(PODS_ROOT)/pjsip-ios/Pod/pjsip-lib/*.a'
+  s.vendored_libraries = '../pjsip-ios/Pod/pjsip-lib/*.a'
 
   s.dependency 'AFNetworking/Reachability', '~> 3'
   s.dependency 'libextobjc', '~> 0.4'
   s.dependency 'CocoaLumberjack', '2.0.0-rc'
   s.dependency 'FCUUID', '~> 1.1'
+
+  s.frameworks = 'QuartzCore', 'UIKit', 'CoreVideo', 'CoreMedia', 'CoreGraphics', 'OpenGLES'
 
   s.xcconfig = {
     'GCC_PREPROCESSOR_DEFINITIONS' => '$(inherited) PJ_AUTOCONF=1',
