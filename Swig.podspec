@@ -41,7 +41,8 @@ Pod::Spec.new do |s|
   s.xcconfig = {
     'GCC_PREPROCESSOR_DEFINITIONS' => '$(inherited) PJ_AUTOCONF=1',
     'HEADER_SEARCH_PATHS'  => '$(inherited) $(PODS_ROOT)/pjsip-ios/Pod/pjsip-include $(SOURCE_ROOT)/../Pod/pjsip-include $(PODS_ROOT)/Swig/Pod/openfec/include',
-    'OTHER_LDFLAGS' => '-lc++'
+    'OTHER_LDFLAGS' => '-lc++',
+    'ENABLE_BITCODE' => 'NO'
   }
 
 end
