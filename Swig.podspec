@@ -28,6 +28,7 @@ Pod::Spec.new do |s|
   s.preserve_paths = 'Pod/Classes/**/*{c,h,m}', 'Pod/SoundSwitch/*{h,m}', 'Pod/openfec/include/**/*{h}'
 
   # s.vendored_libraries = 'Pod/openfec/lib/*.a'
+  s.vendored_libraries = '$(PODS_ROOT)/pjsip-ios/Pod/pjsip-lib/*.a'
 
   s.dependency 'AFNetworking/Reachability', '~> 3'
   s.dependency 'libextobjc', '~> 0.4'
