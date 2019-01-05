@@ -2276,6 +2276,8 @@ static void SWOnTyping (pjsua_call_id call_id, const pj_str_t *from, const pj_st
 }
 - (void) incomingRefer:(pjsip_rx_data *)data {
     
+    BOOL ipv6Enabled = (data->pkt_info.src_addr.addr.sa_family == AF_INET6);
+    
     /* Смотрим о каком абоненте речь в сообщении */
     
     pjsua_acc_id acc_id;
@@ -2299,112 +2301,47 @@ static void SWOnTyping (pjsua_call_id call_id, const pj_str_t *from, const pj_st
     
     pjsua_acc_info accountInfo = [account getInfo];
     
-    /*
-     @synchronized ([SWAccount getLocker]) {
-     pjsua_acc_get_info(acc_id, &accountInfo);
-     }
-     */
-    
     pjsip_sip_uri *to = (pjsip_sip_uri *)pjsip_uri_get_uri(data->msg_info.to->uri);
     pjsip_sip_uri *from = (pjsip_sip_uri *)pjsip_uri_get_uri(data->msg_info.from->uri);
     
+#ifdef DEBUG
+#warning test
+    [self onReferFrom:[NSString stringWithPJString:from->user] server:[NSString stringWithPJString:refer_sip_uri->host] port:refer_sip_uri->port forAccount:acc_id ipV6:ipv6Enabled callId:[NSString stringWithPJString:data->msg_info.cid->id] cSeq:0];
+#else
+#error test
+#endif
+    //[self onReferFrom:[NSString stringWithPJString:from->user] server:[NSString stringWithPJString:refer_sip_uri->host] port:refer_sip_uri->port forAccount:acc_id ipV6:ipv6Enabled callId:[NSString stringWithPJString:data->msg_info.cid->id] cSeq:data->msg_info.cseq->cseq];
+    
+    /*
     char to_string[256];
     char from_string[256];
+#ifdef DEBUG
+#warning test
+    NSString *abonent = @"992000000012";
+    NSString *voiceUrl = @"life.megafon.tj";
+    int voicePort = 5062;
+    
+    NSString *targetUrl = [NSString stringWithFormat:@"<sips:%@@%@:%d>", abonent, voiceUrl, voicePort];
+    
+    pj_str_t test = [targetUrl pjString];
+#else
+#error test
+#endif
     
     pj_str_t source;
     source.ptr = to_string;
     source.slen = snprintf(to_string, 256, "<sips:%.*s@%.*s>", (int)to->user.slen, to->user.ptr, (int)to->host.slen,to->host.ptr);
     
+    
     pj_str_t target;
     target.ptr = from_string;
     target.slen = snprintf(from_string, 256, "<sips:%.*s@%.*s:%d>", (int)from->user.slen, from->user.ptr, (int)refer_sip_uri->host.slen,refer_sip_uri->host.ptr,refer_sip_uri->port);
-    /* Создаем непосредственно запрос */
-    
-    //    pj_str_t proxy = pj_str((char *)"<sips:[2001:470:1f09:1127::127]:5060;transport=TLS>");
-    
-    
-    //    pjsip_sip_uri *fromUri = (pjsip_sip_uri*)pjsip_uri_get_uri(data->msg_info.from->uri);
-    //
-    //
-    //
-    //
-    //    pj_addrinfo ai[10];
-    //
-    //    pjsip_uri* refer_uri = pjsip_parse_uri([SWEndpoint sharedEndpoint].pjPool, refer_to->hvalue.ptr, refer_to->hvalue.slen, NULL);
-    //    pjsip_sip_uri *refer_sip_uri = (pjsip_sip_uri *)pjsip_uri_get_uri(refer_uri);
-    //
-    //    unsigned int count = 10;
-    //    status = pj_getaddrinfo(data->pkt_info.src_addr.addr.sa_family, &refer_sip_uri->host, &count, ai);
-    //
-    //    char string_address[1024];
-    //    pj_sockaddr_print(&ai[0].ai_addr, string_address, 1024, 2);
-    //
-    //    char proxy_string[256];
-    //
-    //
-    //
-    //
-    //    pj_str_t proxy;
-    //    proxy.ptr = proxy_string;
-    //    proxy.slen = snprintf(proxy_string, 256, "<sips:%s:%d;transport=TLS>", string_address, (int)refer_sip_uri->port);
-    //
-    //    status = pjsip_endpt_create_request(data->tp_info.transport->endpt,
-    //                                        &pjsip_notify_method,
-    //                                        &proxy, //proxy
-    //                                        &source, //from
-    //                                        &target, //to
-    //                                        &info.acc_uri, //contact
-    //                                        &data->msg_info.cid->id,
-    //                                        data->msg_info.cseq->cseq,
-    //                                        NULL,
-    //                                        &tx_msg);
-    //
-    //    pj_str_t hname = pj_str((char *)"Event");
-    //    pj_str_t hvalue = pj_str((char *)"Ready");
-    //
-    //    pjsip_generic_string_hdr* event_hdr = pjsip_generic_string_hdr_create(tx_msg->pool, &hname, &hvalue);
-    //
-    //
-    //    if (status != PJ_SUCCESS) {
-    //        return;
-    //    }
-    //
-    //
-    //    pjsip_msg_add_hdr(tx_msg->msg, (pjsip_hdr*)event_hdr);
-    //
-    //    if (status != PJ_SUCCESS) {
-    //        return;
-    //    }
-    
-    //    pjsip_endpt_send_request(pjsua_get_pjsip_endpt(), tx_msg, 5000, nil, &refer_notify_callback);
-    
-    //    status = pjsip_endpt_send_request_stateless(pjsua_get_pjsip_endpt(), tx_msg, nil, nil);
     
     pjsip_tx_data *pjsua_data;
-    //
+    
     pjsua_acc_create_request(acc_id, &pjsip_notify_method, &target, &pjsua_data);
-    //
     
-    /*
-    pjsua_acc_config acc_cfg;
-    pjsua_acc_get_config(acc_id, pjsua_data->pool, &acc_cfg);
     
-    if (data->pkt_info.src_addr.addr.sa_family == AF_INET6) {
-        acc_cfg.ipv6_media_use = PJSUA_IPV6_ENABLED;
-        NSLog(@"*** WIll USE IPv6 For Media");
-    } else {
-        acc_cfg.ipv6_media_use = PJSUA_IPV6_DISABLED;
-        NSLog(@"*** WIll USE IPv4 For Media");
-        
-    }
-    
-    pj_status_t status_acc = pjsua_acc_modify(acc_id, &acc_cfg);
-    if (status_acc != PJ_SUCCESS) {
-        NSLog(@"Failed To modify acc");
-    }
-     */
-    
-    BOOL ipv6Enabled = (data->pkt_info.src_addr.addr.sa_family == AF_INET6);
     [self setMediaIpv6Enabled:ipv6Enabled forAccId:acc_id];
     
     pj_str_t hname = pj_str((char *)"Event");
@@ -2415,11 +2352,7 @@ static void SWOnTyping (pjsua_call_id call_id, const pj_str_t *from, const pj_st
     
     pjsip_msg_find_remove_hdr(pjsua_data->msg, PJSIP_H_CSEQ, NULL);
     pjsip_msg_find_remove_hdr(pjsua_data->msg, PJSIP_H_CALL_ID, NULL);
-    //
-    //    pjsip_contact_hdr *contact_hdr = pjsip_contact_hdr_create(pjsua_data->pool);
-    //    contact_hdr->uri = to;
-    //    pjsip_msg_add_hdr(pjsua_data->msg, contact_hdr);
-    //
+    
     pjsip_cseq_hdr *cseq_hdr = pjsip_cseq_hdr_create(pjsua_data->pool);
     cseq_hdr->cseq = data->msg_info.cseq->cseq;
     cseq_hdr->method = pjsip_notify_method;
@@ -2428,6 +2361,48 @@ static void SWOnTyping (pjsua_call_id call_id, const pj_str_t *from, const pj_st
     pjsip_cid_hdr* cid_hdr = pjsip_cid_hdr_create(pjsua_data->pool);
     cid_hdr->id = data->msg_info.cid->id;
     pjsip_msg_add_hdr(pjsua_data->msg, cid_hdr);
+    
+    //
+    status = pjsip_endpt_send_request(pjsua_get_pjsip_endpt(), pjsua_data, 1000, nil, &refer_notify_callback);
+    
+    if (status != PJ_SUCCESS) {
+        return;
+    }
+     */
+}
+
+- (void) onReferFrom: (NSString *) abonent server: (NSString *)voiceUrl port:(int)voicePort forAccount: (int)acc_id ipV6: (BOOL) ipv6Enabled callId: (NSString *)callId cSeq: (int)cSeq {
+    
+    pj_status_t    status;
+    
+    NSString *targetUrl = [NSString stringWithFormat:@"<sips:%@@%@:%d>", abonent, voiceUrl, voicePort];
+    
+    pj_str_t target = [targetUrl pjString];
+    
+    pjsip_tx_data *pjsua_data;
+    
+    pjsua_acc_create_request(acc_id, &pjsip_notify_method, &target, &pjsua_data);
+    
+    [self setMediaIpv6Enabled:ipv6Enabled forAccId:acc_id];
+    
+    pj_str_t hname = pj_str((char *)"Event");
+    pj_str_t hvalue = pj_str((char *)"Ready");
+    pjsip_generic_string_hdr* event_hdr = pjsip_generic_string_hdr_create(pjsua_data->pool, &hname, &hvalue);
+    
+    pjsip_msg_add_hdr(pjsua_data->msg, (pjsip_hdr*)event_hdr);
+    
+    pjsip_msg_find_remove_hdr(pjsua_data->msg, PJSIP_H_CSEQ, NULL);
+    pjsip_msg_find_remove_hdr(pjsua_data->msg, PJSIP_H_CALL_ID, NULL);
+    
+    pjsip_cseq_hdr *cseq_hdr = pjsip_cseq_hdr_create(pjsua_data->pool);
+    cseq_hdr->cseq = cSeq;
+    cseq_hdr->method = pjsip_notify_method;
+    pjsip_msg_add_hdr(pjsua_data->msg, cseq_hdr);
+    
+    pjsip_cid_hdr* cid_hdr = pjsip_cid_hdr_create(pjsua_data->pool);
+    cid_hdr->id = [callId pjString];
+    pjsip_msg_add_hdr(pjsua_data->msg, cid_hdr);
+    
     
     //
     status = pjsip_endpt_send_request(pjsua_get_pjsip_endpt(), pjsua_data, 1000, nil, &refer_notify_callback);
