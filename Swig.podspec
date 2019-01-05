@@ -27,7 +27,7 @@ Pod::Spec.new do |s|
   s.source_files = 'Pod/Classes/**/*{c,h,m}', 'Pod/SoundSwitch/*{h,m}'
   s.preserve_paths = 'Pod/Classes/**/*{c,h,m}', 'Pod/SoundSwitch/*{h,m}', 'Pod/openfec/include/**/*{h}'
 
-  # s.vendored_libraries = 'Pod/openfec/lib/*.a'
+  s.vendored_libraries = 'Pod/openfec/lib/*.a'
   s.vendored_libraries = '$(PODS_ROOT)/pjsip-ios/Pod/pjsip-lib/*.a'
 
   s.dependency 'AFNetworking/Reachability', '~> 3'
@@ -37,7 +37,8 @@ Pod::Spec.new do |s|
 
   s.xcconfig = {
     'GCC_PREPROCESSOR_DEFINITIONS' => '$(inherited) PJ_AUTOCONF=1',
-    'HEADER_SEARCH_PATHS'  => '$(inherited) $(PODS_ROOT)/pjsip-ios/Pod/pjsip-include $(SOURCE_ROOT)/../Pod/pjsip-include $(PODS_ROOT)/Swig/Pod/openfec/include'
+    'HEADER_SEARCH_PATHS'  => '$(inherited) $(PODS_ROOT)/pjsip-ios/Pod/pjsip-include $(SOURCE_ROOT)/../Pod/pjsip-include $(PODS_ROOT)/Swig/Pod/openfec/include',
+    'OTHER_LDFLAGS' => '-lc++'
   }
 
 end
