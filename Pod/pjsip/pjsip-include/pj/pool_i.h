@@ -19,7 +19,7 @@
  */
 
 
-#include <pj/string.h>
+#include <pj/pj_string.h>
 
 
 PJ_IDEF(pj_size_t) pj_pool_get_capacity( pj_pool_t *pool )

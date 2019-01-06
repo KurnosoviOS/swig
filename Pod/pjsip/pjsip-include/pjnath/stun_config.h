@@ -26,9 +26,9 @@
  */
 
 #include <pjnath/stun_msg.h>
-#include <pj/assert.h>
+#include <pj/pj_assert.h>
 #include <pj/errno.h>
-#include <pj/string.h>
+#include <pj/pj_string.h>
 
 
 PJ_BEGIN_DECL

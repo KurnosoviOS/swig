@@ -29,7 +29,7 @@
 #include <pjmedia/format.h>
 #include <pjmedia/frame.h>
 #include <pjmedia/signatures.h>
-#include <pj/assert.h>
+#include <pj/pj_assert.h>
 #include <pj/os.h>
 
 
