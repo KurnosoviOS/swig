@@ -35,7 +35,7 @@ Pod::Spec.new do |s|
   s.dependency 'libextobjc', '~> 0.4'
   s.dependency 'CocoaLumberjack', '2.0.0-rc'
   s.dependency 'FCUUID', '~> 1.1'
-  s.dependency 'pjsip'
+  s.dependency 'pjsip-ios'
 
   s.frameworks = 'QuartzCore', 'UIKit', 'CoreVideo', 'CoreMedia', 'CoreGraphics', 'OpenGLES'
 
