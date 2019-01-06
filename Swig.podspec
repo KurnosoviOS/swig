@@ -24,8 +24,8 @@ Pod::Spec.new do |s|
   s.requires_arc = true
 
   s.resources = 'Pod/Assets/*', 'Pod/SoundSwitch/*.caf'
-  s.source_files = 'Pod/Classes/**/*{c,h,m}', 'Pod/SoundSwitch/*{h,m}', 'Pod/openfec/include/**/*{h}'
-  s.preserve_paths = 'Pod/Classes/**/*{c,h,m}', 'Pod/SoundSwitch/*{h,m}', 'Pod/openfec/include/**/*{h}', 'Pod/openfec/lib/*{a}'
+  s.source_files = 'Pod/Classes/**/*{c,h,m}', 'Pod/SoundSwitch/*{h,m}', 'Pod/openfec/include/**/*{h}', 'Pod/pjsip/pjsip-include/**/*{h}'
+  s.preserve_paths = 'Pod/Classes/**/*{c,h,m}', 'Pod/SoundSwitch/*{h,m}', 'Pod/openfec/include/**/*{h}', 'Pod/openfec/lib/*{a}', 'Pod/pjsip/**/*{h,a}'
 
   s.vendored_libraries = 'Pod/openfec/lib/*.a'
   s.ios.vendored_libraries = 'Pod/openfec/lib/libopenfec.a'
@@ -35,14 +35,13 @@ Pod::Spec.new do |s|
   s.dependency 'libextobjc', '~> 0.4'
   s.dependency 'CocoaLumberjack', '2.0.0-rc'
   s.dependency 'FCUUID', '~> 1.1'
-  s.dependency 'pjsip-ios'
 
   s.frameworks = 'QuartzCore', 'UIKit', 'CoreVideo', 'CoreMedia', 'CoreGraphics', 'OpenGLES'
 
   s.xcconfig = {
     'GCC_PREPROCESSOR_DEFINITIONS' => '$(inherited) PJ_AUTOCONF=1',
-    'HEADER_SEARCH_PATHS'  => '$(inherited) $(PODS_ROOT)/Swig/Pod/openfec/include',
-    'LIBRARY_SEARCH_PATHS' => '$(PODS_ROOT)/Swig/Pod/openfec/lib',
+    'HEADER_SEARCH_PATHS'  => '$(inherited) $(PODS_ROOT)/Swig/pjsip/pjsip-include $(SOURCE_ROOT)/../Pod/pjsip-include $(PODS_ROOT)/Swig/Pod/openfec/include',
+    'LIBRARY_SEARCH_PATHS' => '$(PODS_ROOT)/Swig/Pod/openfec/lib $(PODS_ROOT)/Swig/pjsip/pjsip-lib',
     'OTHER_LDFLAGS' => '-lc++',
     'ENABLE_BITCODE' => 'NO'
   }
