@@ -9,7 +9,7 @@
 
 Pod::Spec.new do |s|
   s.name             = "Swig"
-  s.version          = "0.4.1"
+  s.version          = "0.4.2"
   s.summary          = "PJSIP Wrapper for ios"
   s.description      = <<-DESC
                        Simplifing the use of pjsip on ios
@@ -29,7 +29,7 @@ Pod::Spec.new do |s|
 
   s.vendored_libraries = 'Pod/openfec/lib/*.a'
   s.ios.vendored_libraries = 'Pod/openfec/lib/libopenfec.a'
-  s.vendored_libraries = '../pjsip-ios/Pod/pjsip-lib/*.a'
+  # s.vendored_libraries = '../pjsip-ios/Pod/pjsip-lib/*.a'
 
   s.dependency 'AFNetworking/Reachability', '~> 3'
   s.dependency 'libextobjc', '~> 0.4'
