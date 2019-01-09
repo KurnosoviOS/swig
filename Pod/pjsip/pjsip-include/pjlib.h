@@ -29,7 +29,7 @@
 #include <pj/activesock.h>
 #include <pj/addr_resolv.h>
 #include <pj/array.h>
-#include <pj/pj_assert.h>
+#include <pj/assert.h>
 #include <pj/ctype.h>
 #include <pj/errno.h>
 #include <pj/except.h>
@@ -53,7 +53,7 @@
 #include <pj/sock_qos.h>
 #include <pj/sock_select.h>
 #include <pj/ssl_sock.h>
-#include <pj/pj_string.h>
+#include <pj/string.h>
 #include <pj/timer.h>
 #include <pj/unicode.h>
 

@@ -2,7 +2,7 @@
 
 #include <pjmedia/vid_stream.h>
 #include <pjmedia/stream.h>
-#include <pj/pj_assert.h>
+#include <pj/assert.h>
 #include <pj/pool.h>
 #include <pj/log.h>
 #include "transport_adapter_nack.h"

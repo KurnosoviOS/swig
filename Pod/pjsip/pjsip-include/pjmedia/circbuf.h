@@ -26,7 +26,7 @@
  * @brief Circular Buffer.
  */
 
-#include <pj/pj_assert.h>
+#include <pj/assert.h>
 #include <pj/errno.h>
 #include <pj/pool.h>
 #include <pjmedia/frame.h>

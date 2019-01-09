@@ -15,6 +15,7 @@
 #import "SWCall.h"
 #import "pjsua.h"
 #import "NSString+PJString.h"
+#import <AFNetworking/AFNetworkReachabilityManager.h>
 #import <AVFoundation/AVFoundation.h>
 #import <AudioToolbox/AudioToolbox.h>
 
@@ -22,7 +23,6 @@
 #import "Logger.h"
 #import "SWAccountConfiguration.h"
 #import "SWUriFormatter.h"
-#import <SystemConfiguration/SystemConfiguration.h>
 
 #include <pjsua-lib/pjsua.h>
 #include <pjsua-lib/pjsua_internal.h>
@@ -305,6 +305,24 @@ static SWEndpoint *_sharedEndpoint = nil;
     //TODO check if the reachability happens in background
     //FIX make sure connect doesnt get called too often
     //IP Change logic
+    
+    [[AFNetworkReachabilityManager sharedManager] setReachabilityStatusChangeBlock:^(AFNetworkReachabilityStatus status) {
+        
+        NSLog(@"<--network reachability--> status: %d", status);
+        
+        //        if ([AFNetworkReachabilityManager sharedManager].reachableViaWiFi) {
+        //            [self performSelectorOnMainThread:@selector(keepAlive) withObject:nil waitUntilDone:YES];
+        //        }
+        //        else if ([AFNetworkReachabilityManager sharedManager].reachableViaWWAN) {
+        //            [self performSelectorOnMainThread:@selector(keepAlive) withObject:nil waitUntilDone:YES];
+        //        }
+        //        else {
+        //            //offline
+        //        }
+    }];
+    
+    
+    [[AFNetworkReachabilityManager sharedManager] startMonitoring];
     
     __weak typeof(self) weakSelf = self;
     

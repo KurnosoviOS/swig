@@ -28,7 +28,7 @@
 
 #include <pjmedia/types.h>
 #include <pjmedia/errno.h>
-#include <pj/pj_string.h>
+#include <pj/string.h>
 
 /**
  * @defgroup PJMEDIA_TRANSPORT Media Transport

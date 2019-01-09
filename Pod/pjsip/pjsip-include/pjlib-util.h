@@ -50,7 +50,7 @@
 
 /* Text scanner and utilities */
 #include <pjlib-util/scanner.h>
-#include <pjlib-util/util_string.h>
+#include <pjlib-util/string.h>
 
 /* XML */
 #include <pjlib-util/xml.h>

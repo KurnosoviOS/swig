@@ -28,7 +28,7 @@
 #include <pjsip/sip_transport.h>
 #include <pj/pool.h>
 #include <pj/ssl_sock.h>
-#include <pj/pj_string.h>
+#include <pj/string.h>
 #include <pj/sock_qos.h>
 
 

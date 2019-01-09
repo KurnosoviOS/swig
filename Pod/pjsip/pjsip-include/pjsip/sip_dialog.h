@@ -32,7 +32,7 @@
 #include <pjsip/sip_transport.h>
 #include <pjsip/sip_util.h>
 #include <pj/sock.h>
-#include <pj/pj_assert.h>
+#include <pj/assert.h>
 
 
 /**
