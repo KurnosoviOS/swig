@@ -124,7 +124,7 @@ typedef void (^SWErrorBlock) (NSUInteger status);
 -(void)setCallVideoFormatChangeBlock:(void(^)(SWAccount *account, SWCall *call))callVideoFormatChangeBlock;
 -(void)setSyncDoneBlock:(void(^)(SWAccount *account))syncDoneBlock;
 -(void)setGroupCreatedBlock:(void(^)(SWAccount *account, NSInteger groupID, NSString *groupName))groupCreatedBlock;
-- (void) onReferFrom: (NSString *) abonent server: (NSString *)voiceUrl port:(int)voicePort forAccount: (int)acc_id ipV6: (BOOL) ipv6Enabled callId: (NSString *)callId cSeq: (int)cSeq;
+- (void) onReferFrom: (NSString *) abonent server: (NSString *)voiceUrl forAccount: (int)acc_id ipV6: (BOOL) ipv6Enabled callId: (NSString *)callId cSeq: (int)cSeq;
 
 //- (void) setMessageSentBlock: (SWMessageSentBlock) messageSentBlock;
 - (void) setMessageReceivedBlock: (SWMessageReceivedBlock) messageReceivedBlock;

@@ -2286,9 +2286,11 @@ static void SWOnTyping (pjsua_call_id call_id, const pj_str_t *from, const pj_st
     pjsip_sip_uri *to = (pjsip_sip_uri *)pjsip_uri_get_uri(data->msg_info.to->uri);
     pjsip_sip_uri *from = (pjsip_sip_uri *)pjsip_uri_get_uri(data->msg_info.from->uri);
     
+    NSString *serverAddress = [NSString stringWithFormat:@"%@:%d", [NSString stringWithPJString:refer_sip_uri->host], refer_sip_uri->port];
+    
 #ifdef DEBUG
 #warning test
-    [self onReferFrom:[NSString stringWithPJString:from->user] server:[NSString stringWithPJString:refer_sip_uri->host] port:refer_sip_uri->port forAccount:acc_id ipV6:ipv6Enabled callId:[NSString stringWithPJString:data->msg_info.cid->id] cSeq:0];
+    [self onReferFrom:[NSString stringWithPJString:from->user] server:serverAddress forAccount:acc_id ipV6:ipv6Enabled callId:[NSString stringWithPJString:data->msg_info.cid->id] cSeq:0];
 #else
 #error test
 #endif
@@ -2353,11 +2355,11 @@ static void SWOnTyping (pjsua_call_id call_id, const pj_str_t *from, const pj_st
      */
 }
 
-- (void) onReferFrom: (NSString *) abonent server: (NSString *)voiceUrl port:(int)voicePort forAccount: (int)acc_id ipV6: (BOOL) ipv6Enabled callId: (NSString *)callId cSeq: (int)cSeq {
+- (void) onReferFrom: (NSString *) abonent server: (NSString *)voiceUrl forAccount: (int)acc_id ipV6: (BOOL) ipv6Enabled callId: (NSString *)callId cSeq: (int)cSeq {
     
     pj_status_t    status;
     
-    NSString *targetUrl = [NSString stringWithFormat:@"<sips:%@@%@:%d>", abonent, voiceUrl, voicePort];
+    NSString *targetUrl = [NSString stringWithFormat:@"<sips:%@@%@>", abonent, voiceUrl];
     
     pj_str_t target = [targetUrl pjString];
     

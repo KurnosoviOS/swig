@@ -63,6 +63,7 @@ typedef NS_ENUM(NSInteger, SWMessageDirection) {
 @property (nonatomic, assign) BOOL isAuthorized;
 
 -(void)configure:(SWAccountConfiguration *)configuration completionHandler:(void(^)(NSError *error))handler; //configure and add account
+-(void)configureOnRegThread:(SWAccountConfiguration *)configuration completionHandler:(void(^)(NSError *error))handler;
 -(void)configureVideoCodecForDevice: (int) devId;
 -(void)setCode: (NSString *)code completionHandler:(void(^)(NSError *error))handler;
 -(void)setPhone: (NSString *)phone completionHandler:(void(^)(NSError *error))handler;

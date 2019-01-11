@@ -88,6 +88,15 @@ void * refToSelf;
     [self didChangeValueForKey:@"accountConfiguration"];
 }
 
+-(void)configureOnRegThread:(SWAccountConfiguration *)configuration completionHandler:(void(^)(NSError *error))handler {
+    SWThreadManager *thrManager = [SWEndpoint sharedEndpoint].threadFactory;
+    NSThread *regThread = thrManager.getCallManagementThread;
+    
+    [thrManager runBlock:^{
+        [self configure:configuration completionHandler:handler];
+    } onThread:regThread wait:NO];
+}
+
 -(void)configure:(SWAccountConfiguration *)configuration completionHandler:(void(^)(NSError *error))handler {
     pj_status_t status;
 
