@@ -58,6 +58,8 @@ typedef NS_ENUM(NSInteger, SWCallReason) {
 @property (nonatomic, readonly, strong) SWContact *contact;
 @property (nonatomic, readonly) NSInteger callId;
 @property (nonatomic, readonly) NSString *sipCallId;
+@property (nonatomic, readonly) BOOL isCallIdReplaced;
+@property (nonatomic, readonly) NSString *localCallId;
 @property (nonatomic, readonly) NSInteger accountId;
 @property (nonatomic, readonly) SWCallState callState;
 @property (nonatomic, readonly) SWMediaState mediaState;
@@ -93,6 +95,7 @@ typedef NS_ENUM(NSInteger, SWCallReason) {
 -(instancetype)initWithCallId:(NSUInteger)callId accountId:(NSInteger)accountId inBound:(BOOL)inbound isGsm: (BOOL) isGsm;
 +(instancetype)callWithId:(NSInteger)callId accountId:(NSInteger)accountId inBound:(BOOL)inbound isGsm: (BOOL) isGsm;
 +(instancetype)callBeforeSipForAccountId:(NSInteger)accountId inBound:(BOOL)inbound withVideo: (BOOL) withVideo forUri: (NSString *) uri isGsm: (BOOL) isGsm;
++(instancetype)callBeforeSipForAccountId:(NSInteger)accountId inBound:(BOOL)inbound withVideo: (BOOL) withVideo forUri: (NSString *) uri isGsm: (BOOL) isGsm withCallId: (NSString *)callId;
 -(void)initSipDataForCallId: (NSUInteger)callId;
 
 -(SWAccount *)getAccount;

@@ -271,6 +271,9 @@ static SWEndpoint *_sharedEndpoint = nil;
         return nil;
     }
     
+    self.replacedCallIds = [NSMutableDictionary new];
+    self.reverseCallIds = [NSMutableDictionary new];
+    
     self->_messageSender = [SWMessageSender new];
     self->_intentManager = [SWIntentManager new];
     
@@ -1752,11 +1755,54 @@ static void SWOnTyping (pjsua_call_id call_id, const pj_str_t *from, const pj_st
     [self didChangeValueForKey:@"accounts"];
 }
 
+- (void) replaceTxCallIdForData: (pjsip_tx_data *)tdata {
+    pjsip_cid_hdr *callIdHeader = ((pjsip_cid_hdr*)pjsip_msg_find_hdr(tdata->msg, PJSIP_H_CALL_ID, NULL));
+    
+    if (callIdHeader) {
+        pjsip_to_hdr *to_hdr = PJSIP_MSG_TO_HDR(tdata->msg);
+        
+        pjsip_sip_uri *uri = (pjsip_sip_uri *)pjsip_uri_get_uri(to_hdr->uri);
+        
+        NSString *phone = [NSString stringWithPJString:uri->user];
+        
+        NSString *replacedCallId = self.replacedCallIds[phone];
+        NSString *originalCallId = [NSString stringWithPJString:callIdHeader->id];
+        
+        if (replacedCallId == nil) { return; }
+        
+        [self.reverseCallIds setObject: originalCallId forKey:replacedCallId];
+        NSLog(@"<--call--><--swig--> callId replaced from %@ to %@", originalCallId, replacedCallId);
+        
+        pjsip_msg_find_remove_hdr(tdata->msg, PJSIP_H_CALL_ID, nil);
+        callIdHeader->id = [replacedCallId pjString];
+        pjsip_msg_add_hdr(tdata->msg, callIdHeader);
+    }
+}
+
+- (void) replaceRxCallIdForData: (pjsip_rx_data *)data {
+    pjsip_cid_hdr *callIdHeader = ((pjsip_cid_hdr*)pjsip_msg_find_hdr(data->msg_info.msg, PJSIP_H_CALL_ID, NULL));
+    
+    if (callIdHeader) {
+        NSString *replacedCallId = [NSString stringWithPJString:callIdHeader->id];
+        NSString *originalCallId = self.reverseCallIds[replacedCallId];
+        
+        if (originalCallId == nil) { return; }
+        
+        NSLog(@"<--call--><--swig--> callId resolved from %@ to %@", replacedCallId, originalCallId);
+        
+        pjsip_msg_find_remove_hdr(data->msg_info.msg, PJSIP_H_CALL_ID, nil);
+        callIdHeader->id = [originalCallId pjString];
+        pjsip_msg_add_hdr(data->msg_info.msg, callIdHeader);
+    }
+}
+
 - (pj_bool_t) rxRequestPackageProcessing: (pjsip_rx_data *)data {
     
     if (data == nil) {
         return PJ_FALSE;
     }
+    
+    [self replaceRxCallIdForData:data];
     
     NSString *messageStr = [NSString stringWithCharacters:data->msg_info.msg_buf length:data->msg_info.len];
     
@@ -1795,6 +1841,8 @@ static void SWOnTyping (pjsua_call_id call_id, const pj_str_t *from, const pj_st
 }
 
 - (pj_bool_t) txRequestPackageProcessing:(pjsip_tx_data *) tdata {
+    
+    [self replaceTxCallIdForData:tdata];
     
     pjsip_from_hdr *from_hdr = PJSIP_MSG_FROM_HDR(tdata->msg);
     
@@ -1860,6 +1908,7 @@ static void SWOnTyping (pjsua_call_id call_id, const pj_str_t *from, const pj_st
 
 - (pj_bool_t) txResponsePackageProcessing:(pjsip_tx_data *) tdata {
     
+    [self replaceTxCallIdForData:tdata];
     //    if (pjsip_method_cmp(&tdata->msg->type, &pjsip_register_method) == 0) {
     //
     //    pjsip_via_hdr *via_hdr = (pjsip_via_hdr *)pjsip_msg_find_hdr(tdata->msg, PJSIP_H_VIA, nil);
@@ -1875,6 +1924,7 @@ static void SWOnTyping (pjsua_call_id call_id, const pj_str_t *from, const pj_st
 
 - (pj_bool_t) rxResponsePackageProcessing:(pjsip_rx_data *)data {
     
+    [self replaceRxCallIdForData:data];
     /* Разбираем - на какой запрос пришел ответ */
     NSString *call_id = [NSString stringWithPJString:data->msg_info.cid->id];
     int status = data->msg_info.msg->line.status.code;

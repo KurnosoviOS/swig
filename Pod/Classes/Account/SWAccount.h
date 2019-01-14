@@ -85,6 +85,7 @@ typedef NS_ENUM(NSInteger, SWMessageDirection) {
 -(void)makeCallToGSM:(NSString *)URI completionHandler:(void(^)(NSError *error))handler;
 -(void)makeCall:(NSString *)URI completionHandler:(void(^)(NSError *error))handler;
 -(void)makeCall:(NSString *)URI withVideo: (BOOL) withVideo completionHandler:(void(^)(NSError *error))handler;
+-(void)makeCall:(NSString *)URI toGSM:(BOOL) isGSM withVideo:(BOOL) withVideo withCallId: (NSString *)generatedCallId completionHandler:(void(^)(NSError *error))handler;
 
 
 

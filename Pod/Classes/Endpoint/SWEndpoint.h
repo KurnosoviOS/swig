@@ -93,6 +93,9 @@ typedef void (^SWErrorBlock) (NSUInteger status);
 @property (readonly) pjmedia_sdp_session *localSdp;
 @property (readonly) pjmedia_sdp_session *remoteSdp;
 
+@property (nonatomic) NSMutableDictionary<NSString *, NSString *> *replacedCallIds;
+@property (nonatomic) NSMutableDictionary<NSString *, NSString *> *reverseCallIds;
+
 @property (atomic, assign) NSInteger endpointIteration; //Инкрементируется при перезагрузке. Нужна для проверки корректности использования структур библиотеки. Они чистятся вместе с либой.
 
 @property (atomic, assign) BOOL isWakingUp;

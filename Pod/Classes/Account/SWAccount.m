@@ -27,6 +27,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifdef DEBUG
+#warning test
+#import <pjsua-lib/pjsua_internal.h>
+#else
+#error test
+#endif
+
 #define kRegTimeout 60 * 60 * 24 // 600
 
 void * refToSelf;
@@ -174,6 +181,13 @@ void * refToSelf;
     
     int accountId = (int)self.accountId;
     
+#ifdef DEBUG
+#warning test
+    auto acc_cnt = pjsua_var.acc_cnt;
+    auto acc = pjsua_var.acc;
+#else
+#error test
+#endif
     status = pjsua_acc_add(&acc_cfg, PJ_TRUE, &accountId);
     
     if (status != PJ_SUCCESS) {
@@ -663,6 +677,10 @@ void * refToSelf;
     [self.calls addObject:call];
     
     //TODO:: setup blocks
+    
+    if (call.isCallIdReplaced) {
+        [[SWEndpoint sharedEndpoint].replacedCallIds setObject:call.sipCallId forKey:call.contact.name];
+    }
 }
 
 -(void)removeCall:(NSInteger)callId {
@@ -671,6 +689,11 @@ void * refToSelf;
     
     if (call) {
         [self.calls removeObject:call];
+        NSString *sipCallId = [[SWEndpoint sharedEndpoint].replacedCallIds objectForKey:call.contact.name];
+        if (sipCallId != nil) {
+            [[SWEndpoint sharedEndpoint].replacedCallIds removeObjectForKey:call.contact.name];
+            [[SWEndpoint sharedEndpoint].reverseCallIds removeObjectForKey:sipCallId];
+        }
     }
     
     call = nil;
@@ -729,6 +752,10 @@ void * refToSelf;
 }
 
 -(void)makeCall:(NSString *)URI toGSM:(BOOL) isGSM withVideo:(BOOL) withVideo completionHandler:(void(^)(NSError *error))handler {
+    [self makeCall:URI toGSM:isGSM withVideo:withVideo withCallId:nil completionHandler:handler];
+}
+
+-(void)makeCall:(NSString *)URI toGSM:(BOOL) isGSM withVideo:(BOOL) withVideo withCallId: (NSString *)generatedCallId completionHandler:(void(^)(NSError *error))handler {
     
     NSLog(@"<--pjPool--> makeCall invoked");
     
@@ -751,7 +778,7 @@ void * refToSelf;
         NSString *uri = [SWUriFormatter sipUriWithPhone:URI fromAccount:self toGSM:isGSM];
         pj_str_t pjuri = [uri pjString];
         
-        SWCall *call = [SWCall callBeforeSipForAccountId:self.accountId inBound:NO withVideo:withVideo forUri: uri isGsm:isGSM];
+        SWCall *call = [SWCall callBeforeSipForAccountId:self.accountId inBound:NO withVideo:withVideo forUri: uri isGsm:isGSM withCallId:generatedCallId];
         
         
         //call.ctcallId = @"outgoing polyphone";
@@ -770,8 +797,9 @@ void * refToSelf;
         
         settings.req_keyframe_method = PJSUA_VID_REQ_KEYFRAME_SIP_INFO;
         settings.flag = withVideo ? PJSUA_CALL_INCLUDE_DISABLED_MEDIA : 0;
-        
+                
         status = pjsua_call_make_call((int)self.accountId, &pjuri, &settings, NULL, NULL, &callIdentifier);
+        
         
         NSLog(@"<--makeCall--> callIdentifier = ")
         

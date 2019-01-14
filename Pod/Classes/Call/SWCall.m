@@ -59,7 +59,7 @@
 
 -(instancetype)initWithCallId:(NSUInteger)callId accountId:(NSInteger)accountId inBound:(BOOL)inbound isGsm: (BOOL) isGsm {
     
-    self = [self initBeforeSipWithAccountId:accountId inBound:inbound withVideo:NO forUri:nil isGsm:isGsm];
+    self = [self initBeforeSipWithAccountId:accountId inBound:inbound withVideo:NO forUri:nil isGsm:isGsm withGeneratedId: nil];
     
     if (!self) {
         return nil;
@@ -75,9 +75,14 @@
     return [self initWithCallId:callId accountId:accountId inBound:inbound isGsm:NO];
 }
 
-- (instancetype)initBeforeSipWithAccountId:(NSInteger)accountId inBound:(BOOL)inbound withVideo: (BOOL) withVideo forUri: (NSString *) uri isGsm: (BOOL) isGsm {
+- (instancetype)initBeforeSipWithAccountId:(NSInteger)accountId inBound:(BOOL)inbound withVideo: (BOOL) withVideo forUri: (NSString *) uri isGsm: (BOOL) isGsm withGeneratedId: (NSString *) generatedCallId {
     
     self = [super init];
+    
+    _sipCallId = generatedCallId;
+    if (generatedCallId != nil) {
+        _isCallIdReplaced = YES;
+    }
     
     //TODO: проверить закомментированный вариант
     //[SWCall closeSoundTrack:nil];
@@ -119,7 +124,7 @@
 
 -(instancetype)initBeforeSipWithAccountId:(NSInteger)accountId inBound:(BOOL)inbound withVideo: (BOOL) withVideo forUri: (NSString *) uri {
     
-    return [self initBeforeSipWithAccountId:accountId inBound:inbound withVideo:withVideo forUri:uri isGsm:NO];
+    return [self initBeforeSipWithAccountId:accountId inBound:inbound withVideo:withVideo forUri:uri isGsm:NO withGeneratedId: nil];
 }
 
 -(void)initSipDataForCallId: (NSUInteger)callId {
@@ -129,7 +134,12 @@
     pjsua_call_info info;
     
     pj_status_t status = pjsua_call_get_info(_callId, &info);
-    _sipCallId = [NSString stringWithPJString:info.call_id];
+    if (_isCallIdReplaced) {
+        _localCallId = [NSString stringWithPJString:info.call_id];
+    }
+    else {
+        _sipCallId = [NSString stringWithPJString:info.call_id];
+    }
     //configure ringback
     
     _ringback = [SWRingback new];
@@ -190,15 +200,19 @@
     return call;
 }
 
-+(instancetype)callBeforeSipForAccountId:(NSInteger)accountId inBound:(BOOL)inbound withVideo: (BOOL) withVideo forUri: (NSString *) uri isGsm: (BOOL) isGsm {
-    
-    SWCall *call = [[SWCall alloc] initBeforeSipWithAccountId:accountId inBound:inbound withVideo:withVideo forUri:uri isGsm:isGsm];
++(instancetype)callBeforeSipForAccountId:(NSInteger)accountId inBound:(BOOL)inbound withVideo: (BOOL) withVideo forUri: (NSString *) uri isGsm: (BOOL) isGsm withCallId: (NSString *)callId {
+    SWCall *call = [[SWCall alloc] initBeforeSipWithAccountId:accountId inBound:inbound withVideo:withVideo forUri:uri isGsm:isGsm withGeneratedId: callId];
     
     return call;
 }
 
++(instancetype)callBeforeSipForAccountId:(NSInteger)accountId inBound:(BOOL)inbound withVideo: (BOOL) withVideo forUri: (NSString *) uri isGsm: (BOOL) isGsm {
+    
+    return [self callBeforeSipForAccountId:accountId inBound:inbound withVideo:withVideo forUri:uri isGsm:isGsm withCallId:nil];
+}
+
 +(instancetype)callBeforeSipForAccountId:(NSInteger)accountId inBound:(BOOL)inbound withVideo: (BOOL) withVideo forUri: (NSString *) uri {
-    return [self callBeforeSipForAccountId:accountId inBound:inbound withVideo:withVideo forUri:uri isGsm:NO];
+    return [self callBeforeSipForAccountId:accountId inBound:inbound withVideo:withVideo forUri:uri isGsm:NO withCallId:nil];
 }
 
 -(void)createLocalNotification {
