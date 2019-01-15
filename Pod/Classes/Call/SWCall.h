@@ -126,6 +126,7 @@ typedef NS_ENUM(NSInteger, SWCallReason) {
 
 +(void)openSoundTrack:(void(^)(NSError *error))handler;
 +(void)closeSoundTrack:(void(^)(NSError *error))handler;
++ (BOOL)isOnlyBuiltinInput;
 
 -(void)updateOverrideSpeaker;
 
