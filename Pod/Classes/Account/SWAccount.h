@@ -61,6 +61,7 @@ typedef NS_ENUM(NSInteger, SWMessageDirection) {
 @property (nonatomic, readonly , assign, getter=isValid) BOOL valid;
 @property (nonatomic, assign) CGSize currentOutputVideoSize;
 @property (nonatomic, assign) BOOL isAuthorized;
+@property (nonatomic, strong) NSMutableArray *calls;
 
 -(void)configure:(SWAccountConfiguration *)configuration completionHandler:(void(^)(NSError *error))handler; //configure and add account
 -(void)configureOnRegThread:(SWAccountConfiguration *)configuration completionHandler:(void(^)(NSError *error))handler;

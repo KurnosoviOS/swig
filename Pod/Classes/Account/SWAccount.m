@@ -41,7 +41,6 @@ void * refToSelf;
 @interface SWAccount ()
 
 @property (nonatomic, strong) SWAccountConfiguration *configuration;
-@property (nonatomic, strong) NSMutableArray *calls;
 
 @property (nonatomic, assign) pj_bool_t neededRegisterState;
 

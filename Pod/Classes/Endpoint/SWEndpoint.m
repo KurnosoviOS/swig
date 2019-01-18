@@ -993,7 +993,9 @@ void logCallback (int level, const char *data, int len) {
     }
     
 #warning надо формировать ошибку
-    handler(nil);
+    if (handler) {
+        handler(nil);
+    }
     
     //    for (SWAccount *account in self.accounts) {
     //        [self removeAccount:account];
