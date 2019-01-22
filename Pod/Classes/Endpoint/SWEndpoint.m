@@ -1316,26 +1316,25 @@ static void SWOnIncomingCall(pjsua_acc_id acc_id, pjsua_call_id call_id, pjsip_r
             [[[endpoint firstAccount] lookupCall:call_id] hangupOnReason:SWCallReasonLocalBusy withCompletion:nil];
         }
     });
-    [endpoint.threadFactory runBlockOnRegThread:^{
-        SWAccount *account = [[SWEndpoint sharedEndpoint] lookupAccount:acc_id];
+    
+    SWAccount *account = [[SWEndpoint sharedEndpoint] lookupAccount:acc_id];
+    
+    if (account) {
         
-        if (account) {
+        SWCall *call = [SWCall callWithId:call_id accountId:acc_id inBound:YES isGsm:NO];
+        
+        if (call) {
             
-            SWCall *call = [SWCall callWithId:call_id accountId:acc_id inBound:YES isGsm:NO];
+            [account addCall:call];
+            NSLog(@"<--callStateChanged--> SWOnIncomingCall");
             
-            if (call) {
-                
-                [account addCall:call];
-                NSLog(@"<--callStateChanged--> SWOnIncomingCall");
-                
-                [call callStateChanged];
-                
-                if ([SWEndpoint sharedEndpoint].incomingCallBlock) {
-                    [SWEndpoint sharedEndpoint].incomingCallBlock(account, call);
-                }
+            [call callStateChanged];
+            
+            if ([SWEndpoint sharedEndpoint].incomingCallBlock) {
+                [SWEndpoint sharedEndpoint].incomingCallBlock(account, call);
             }
         }
-    } wait:NO];
+    }
     
     
 }
@@ -1366,128 +1365,120 @@ static void SWOnCallState(pjsua_call_id call_id, pjsip_event *e) {
         }
     }
     
-    [endpoint.threadFactory runBlockOnRegThread:^{
-        #warning experiment вынесено из блока
-        /*
-        pjsua_call_info callInfo;
-        pjsua_call_get_info(call_id, &callInfo);
-        */
-        
-        if (account) {
-            if (call) {
+    if (account) {
+        if (call) {
+            
+            if (callInfo.state == PJSIP_INV_STATE_CONNECTING && callInfo.role == PJSIP_ROLE_UAC) {
+                pjsip_via_hdr *via_hdr = e->body.rx_msg.rdata->msg_info.via;
+                resp_rport = via_hdr->rport_param;
                 
-                if (callInfo.state == PJSIP_INV_STATE_CONNECTING && callInfo.role == PJSIP_ROLE_UAC) {
-                    pjsip_via_hdr *via_hdr = e->body.rx_msg.rdata->msg_info.via;
-                    resp_rport = via_hdr->rport_param;
-                    
-                    resp_rhost = pj_str(via_hdr->recvd_param.ptr);
-                    resp_rhost.slen = via_hdr->recvd_param.slen;
-                    
-                    NSLog(@"MyRealIP: %@:%d", [NSString stringWithPJString:resp_rhost], resp_rport);
-                }
+                resp_rhost = pj_str(via_hdr->recvd_param.ptr);
+                resp_rhost.slen = via_hdr->recvd_param.slen;
                 
-                
-                if (callInfo.state == PJSIP_INV_STATE_CONFIRMED && callInfo.role == PJSIP_ROLE_UAC) {
+                NSLog(@"MyRealIP: %@:%d", [NSString stringWithPJString:resp_rhost], resp_rport);
+            }
+            
+            
+            if (callInfo.state == PJSIP_INV_STATE_CONFIRMED && callInfo.role == PJSIP_ROLE_UAC) {
 #warning experiment вынесено из блока
-                    /*
-                    pjsip_uri* local_contact_uri = pjsip_parse_uri([SWEndpoint sharedEndpoint].pjPool, callInfo.local_contact.ptr, callInfo.local_contact.slen, NULL);
-                    pjsip_sip_uri *local_contact_sip_uri = (pjsip_sip_uri *)pjsip_uri_get_uri(local_contact_uri);
-                    */
-                     
-                    local_contact_sip_uri->port = resp_rport;
-                    local_contact_sip_uri->host = resp_rhost;
-                    
-                    char contact_buf[512];
-                    pj_str_t new_contact;
-                    new_contact.ptr = contact_buf;
-                    
-                    new_contact.slen = pjsip_uri_print(PJSIP_URI_IN_CONTACT_HDR, local_contact_sip_uri, contact_buf, 512);
-                    
-                    pjsip_tx_data *tdata;
-                    pjsua_call *pjcall;
-                    pjsip_dialog *dlg = NULL;
-                    pj_status_t status;
-                    
-                    status = acquire_call("pjsua_call_update_contact()", call_id, &pjcall, &dlg);
-                    if (status != PJ_SUCCESS) {
-                        NSLog(@"cannot aquire call");
-                    }
-                    
-                    
-                    //                / Create UPDATE with new offer /
-                    status = pjsip_inv_update(pjcall->inv, &new_contact, NULL, &tdata);
-                    if (status != PJ_SUCCESS) {
-                        NSLog(@"Unable to create UPDATE request");
-                    }
-                    
-                    //                / Add additional headers etc /
-                    //                pjsua_process_msg_data(tdata, e->body.tx_msg);
-                    
-                    //                / Send the request /
-                    status = pjsip_inv_send_msg(pjcall->inv, tdata);
-                    if (status != PJ_SUCCESS) {
-                        NSLog(@"Unable to send UPDATE");
-                    }
-                    
-                    if (dlg) pjsip_dlg_dec_lock(dlg);
+                /*
+                 pjsip_uri* local_contact_uri = pjsip_parse_uri([SWEndpoint sharedEndpoint].pjPool, callInfo.local_contact.ptr, callInfo.local_contact.slen, NULL);
+                 pjsip_sip_uri *local_contact_sip_uri = (pjsip_sip_uri *)pjsip_uri_get_uri(local_contact_uri);
+                 */
+                
+                local_contact_sip_uri->port = resp_rport;
+                local_contact_sip_uri->host = resp_rhost;
+                
+                char contact_buf[512];
+                pj_str_t new_contact;
+                new_contact.ptr = contact_buf;
+                
+                new_contact.slen = pjsip_uri_print(PJSIP_URI_IN_CONTACT_HDR, local_contact_sip_uri, contact_buf, 512);
+                
+                pjsip_tx_data *tdata;
+                pjsua_call *pjcall;
+                pjsip_dialog *dlg = NULL;
+                pj_status_t status;
+                
+                status = acquire_call("pjsua_call_update_contact()", call_id, &pjcall, &dlg);
+                if (status != PJ_SUCCESS) {
+                    NSLog(@"cannot aquire call");
                 }
                 
-                NSLog(@"<--callStateChanged--> SWOnCallState: %d callInfo.last_status: %d", callInfo.state, callInfo.last_status);
                 
-                NSInteger hangupReason = 0;
-                
-                if (hangupReasonStr) {
-                    NSRegularExpression* regex = [NSRegularExpression regularExpressionWithPattern:@".*cause=(\\d*);.*" options:NSRegularExpressionCaseInsensitive error:nil];
-                    
-                    hangupReason = [[hangupReasonStr substringWithRange:[[regex firstMatchInString:hangupReasonStr options:0 range:NSMakeRange(0, hangupReasonStr.length)] rangeAtIndex:1]] integerValue];
-                }
-                else {
-                    switch (callInfo.last_status) {
-                        case PJSIP_SC_NOT_ACCEPTABLE:
-                            hangupReason = SWCallReasonUnavailiable;
-                            break;
-                            
-                        case PJSIP_SC_TEMPORARILY_UNAVAILABLE:
-                            hangupReason = SWCallReasonNotAnswered;
-                            break;
-                            
-                        case PJSIP_SC_BUSY_HERE:
-                            hangupReason = SWCallReasonRemoteBusy;
-                            break;
-                            
-                        case PJSIP_SC_PAYMENT_REQUIRED:
-                            hangupReason = SWCallReasonNoMoney;
-                            break;
-                            
-                        case PJSIP_SC_METHOD_NOT_ALLOWED:
-                            hangupReason = SWCallReasonRestricted;
-                            break;
-                            
-                        case 499:
-                            hangupReason = SWCallReasonNotExists;
-                            break;
-                            
-                        default:
-                            break;
-                    }
+                //                / Create UPDATE with new offer /
+                status = pjsip_inv_update(pjcall->inv, &new_contact, NULL, &tdata);
+                if (status != PJ_SUCCESS) {
+                    NSLog(@"Unable to create UPDATE request");
                 }
                 
-                #warning experiment callInfo получаем вне блока
-                //[call callStateChangedWithReason:hangupReason];
-                [call callStateChanged:callInfo withReason:hangupReason];
+                //                / Add additional headers etc /
+                //                pjsua_process_msg_data(tdata, e->body.tx_msg);
                 
-                [endpoint runCallStateChangeBlockForCall:call setCode:callInfo.last_status];
+                //                / Send the request /
+                status = pjsip_inv_send_msg(pjcall->inv, tdata);
+                if (status != PJ_SUCCESS) {
+                    NSLog(@"Unable to send UPDATE");
+                }
                 
-                if (call.callState == SWCallStateDisconnected) {
-                    [account removeCall:call.callId];
-                    rport = 0;
-                    resp_rport = 0;
-                    rhost = pj_str("");
-                    resp_rhost = pj_str("");
+                if (dlg) pjsip_dlg_dec_lock(dlg);
+            }
+            
+            NSLog(@"<--callStateChanged--> SWOnCallState: %d callInfo.last_status: %d", callInfo.state, callInfo.last_status);
+            
+            NSInteger hangupReason = 0;
+            
+            if (hangupReasonStr) {
+                NSRegularExpression* regex = [NSRegularExpression regularExpressionWithPattern:@".*cause=(\\d*);.*" options:NSRegularExpressionCaseInsensitive error:nil];
+                
+                hangupReason = [[hangupReasonStr substringWithRange:[[regex firstMatchInString:hangupReasonStr options:0 range:NSMakeRange(0, hangupReasonStr.length)] rangeAtIndex:1]] integerValue];
+            }
+            else {
+                switch (callInfo.last_status) {
+                    case PJSIP_SC_NOT_ACCEPTABLE:
+                        hangupReason = SWCallReasonUnavailiable;
+                        break;
+                        
+                    case PJSIP_SC_TEMPORARILY_UNAVAILABLE:
+                        hangupReason = SWCallReasonNotAnswered;
+                        break;
+                        
+                    case PJSIP_SC_BUSY_HERE:
+                        hangupReason = SWCallReasonRemoteBusy;
+                        break;
+                        
+                    case PJSIP_SC_PAYMENT_REQUIRED:
+                        hangupReason = SWCallReasonNoMoney;
+                        break;
+                        
+                    case PJSIP_SC_METHOD_NOT_ALLOWED:
+                        hangupReason = SWCallReasonRestricted;
+                        break;
+                        
+                    case 499:
+                        hangupReason = SWCallReasonNotExists;
+                        break;
+                        
+                    default:
+                        break;
                 }
             }
+            
+#warning experiment callInfo получаем вне блока
+            //[call callStateChangedWithReason:hangupReason];
+            [call callStateChanged:callInfo withReason:hangupReason];
+            
+            [endpoint runCallStateChangeBlockForCall:call setCode:callInfo.last_status];
+            
+            if (call.callState == SWCallStateDisconnected) {
+                [account removeCall:call.callId];
+                rport = 0;
+                resp_rport = 0;
+                rhost = pj_str("");
+                resp_rhost = pj_str("");
+            }
         }
-    } wait:NO];
+    }
     
 }
 

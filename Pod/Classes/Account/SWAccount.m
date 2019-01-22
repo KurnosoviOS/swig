@@ -261,6 +261,7 @@ void * refToSelf;
             pjmedia_format format = vdi.fmt[i];
             
             result = CGSizeMake(format.det.vid.size.w, format.det.vid.size.h);
+            NSLog(@"<--videosize--> availiable definition: %dx%d", (int)result.width, (int)result.height);
             
             //Может быть, нашли нужный размер?
             if((result.width == needed.width) && (result.height == needed.height)) {
@@ -482,9 +483,21 @@ void * refToSelf;
 
 -(void)disconnect:(void(^)(NSError *error))handler {
     
+    NSThread *regThread = [[SWEndpoint sharedEndpoint].threadFactory getRegistrationThread];
+    
+    if([NSThread currentThread] != regThread) {
+        [self performSelector:@selector(disconnect:) onThread:regThread withObject:handler waitUntilDone:NO];
+        return;
+    }
+    
     pj_status_t status;
     
-    if (pjsua_acc_get_count() == 0) return;
+    if (pjsua_acc_get_count() == 0) {
+        if (handler) {
+            handler(nil);
+        }
+        return;
+    }
     
     status = pjsua_acc_set_online_status((int)self.accountId, PJ_FALSE);
     
@@ -520,6 +533,7 @@ void * refToSelf;
     if (handler) {
         handler(nil);
     }
+    
 }
 
 -(void)pause:(void(^)(NSError *error))handler {

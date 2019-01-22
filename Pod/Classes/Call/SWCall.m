@@ -1111,16 +1111,16 @@
 }
 
 - (void) sendVideoKeyframe {
+    NSInteger callId = self.callId;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
-        __weak typeof(self) weakSelf = self;
         for(int i = 0; i < 5; i++) {
-            if(!weakSelf) return;
             
             [NSThread sleepForTimeInterval:1];
+            
 #warning UI thread
             dispatch_async(dispatch_get_main_queue(), ^{
                 pj_status_t status;
-                status = pjsua_call_set_vid_strm(weakSelf.callId, PJSUA_CALL_VID_STRM_SEND_KEYFRAME, NULL);
+                status = pjsua_call_set_vid_strm(callId, PJSUA_CALL_VID_STRM_SEND_KEYFRAME, NULL);
             });
         }
     });
@@ -1241,7 +1241,9 @@
 }
 
 - (void) updateOverrideSpeaker {
-    
+    BOOL inbound = self.inbound;
+    SWCallState callState = self.callState;
+    BOOL currentspeaker = _speaker;
     
     dispatch_async(dispatch_get_main_queue(), ^{
         
@@ -1260,7 +1262,7 @@
             pjsua_conf_adjust_rx_level(0, 2.0);
             NSLog(@"<--headset settings-->");
         }
-        else if(_speaker) {
+        else if(currentspeaker) {
             pjsua_conf_adjust_rx_level(0, 1.5);
             pj_status_t stts = pjsua_set_ec(1000,0);
             //pjsua_conf_adjust_rx_level(0, 1.5);
@@ -1287,7 +1289,7 @@
             [audioSession setMode:sessionMode error:nil];
              
             //коллкит корректно понимает переключение на динамик только так
-            if (_speaker) {
+            if (currentspeaker) {
                 //[audioSession overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:nil];
             }
             else {
@@ -1302,30 +1304,30 @@
         BOOL speaker = NO;
         BOOL sessionActive = YES;
         
-        switch (self.callState) {
+        switch (callState) {
             case SWCallStateReady:
                 speaker = YES;
                 //AVAudioSessionCategoryPlayAndRecord не глушится silent switch'ом
                 
-                sessionCategory = self.inbound ? AVAudioSessionCategorySoloAmbient : AVAudioSessionCategoryPlayAndRecord;
+                sessionCategory = inbound ? AVAudioSessionCategorySoloAmbient : AVAudioSessionCategoryPlayAndRecord;
                 
                 break;
             case SWCallStateIncoming:
                 speaker = YES;
-                sessionCategory = self.inbound ? AVAudioSessionCategorySoloAmbient : AVAudioSessionCategoryPlayAndRecord;
+                sessionCategory = inbound ? AVAudioSessionCategorySoloAmbient : AVAudioSessionCategoryPlayAndRecord;
                 break;
             case SWCallStateCalling:
-                speaker = _speaker || self.inbound;
-                sessionCategory = self.inbound ? AVAudioSessionCategorySoloAmbient : AVAudioSessionCategoryPlayAndRecord;
+                speaker = currentspeaker || inbound;
+                sessionCategory = inbound ? AVAudioSessionCategorySoloAmbient : AVAudioSessionCategoryPlayAndRecord;
                 break;
             case SWCallStateConnecting:
                 sessionActive = NO;
-                speaker = _speaker;
+                speaker = currentspeaker;
                 break;
             case SWCallStateConnected:
                 sessionActive = YES;
                 NSLog(@"<--swcall--> ", audioSession);
-                speaker = _speaker;
+                speaker = currentspeaker;
                 
                 sessionMode = AVAudioSessionModeDefault;
                 //sessionMode = AVAudioSessionModeVoiceChat; //в этом моде не переключается громкая связь.
@@ -1348,7 +1350,7 @@
             }
                 
             case SWCallStateDisconnectRingtone:
-                speaker = _speaker;
+                speaker = currentspeaker;
                 break;
             default:
                 break;
@@ -1370,14 +1372,14 @@
         NSLog(@"<--swcall-->audioSession: %@ speaker value:%@", audioSession, speaker ? @"true" : @"false");
         //[audioSession setCategory:sessionCategory error:&error];
         if (speaker) {
-            NSLog(@"<--AudioSession notification--> set category on callstate, speaker on, callstate: %d", self.callState);
+            NSLog(@"<--AudioSession notification--> set category on callstate, speaker on, callstate: %d", callState);
             [audioSession setCategory:sessionCategory withOptions:AVAudioSessionCategoryOptionDefaultToSpeaker|AVAudioSessionCategoryOptionAllowBluetooth|AVAudioSessionCategoryOptionAllowBluetoothA2DP error:&error];
             
             //[audioSession overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:&error];
         }
         
         else {
-            NSLog(@"<--AudioSession notification--> set category on callstate, speaker off, callstate: %d", self.callState);
+            NSLog(@"<--AudioSession notification--> set category on callstate, speaker off, callstate: %d", callState);
             [audioSession setCategory:sessionCategory withOptions:AVAudioSessionCategoryOptionAllowBluetooth|AVAudioSessionCategoryOptionAllowBluetoothA2DP error:&error];
             //[audioSession setCategory:sessionCategory error:&error];
             

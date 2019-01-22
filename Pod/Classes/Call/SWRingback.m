@@ -99,14 +99,14 @@
     
     NSThread *callThread = [endpoint.threadFactory getCallManagementThread];
     
+    int ringbackSlot = (int)self.ringbackSlot;
+    pjmedia_port *ringbackPort = self.ringbackPort;
+    
     [endpoint.threadFactory runBlock:^{
         //Если либа начала перезагрузку, ничего делать уже не надо
         if (pjsua_get_state() != PJSUA_STATE_RUNNING) {
             return;
         }
-        
-        int ringbackSlot = (int)self.ringbackSlot;
-        pjmedia_port *ringbackPort = self.ringbackPort;
         
         pjsua_conf_remove_port(ringbackSlot);
         pjmedia_port_destroy(ringbackPort);
