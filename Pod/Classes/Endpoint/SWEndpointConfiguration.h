@@ -30,6 +30,8 @@
 
 @property (nonatomic, readonly) NSMutableDictionary <NSNumber *, SWRingtoneDescription *> *ringtones;
 @property (nonatomic, copy, nullable) SWRingtoneDescription* (^getRingtoneBlock)(NSInteger reason, SWCall *call);
+@property (nonatomic, assign) BOOL callKitCanHandleAudioSession;
+@property (nonatomic, copy, nullable) BOOL (^areOtherCallsBlock)();
 
 +(instancetype)configurationWithTransportConfigurations:(NSArray *)transportConfigurations;
 

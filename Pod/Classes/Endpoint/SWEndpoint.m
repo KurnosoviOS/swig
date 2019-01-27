@@ -309,10 +309,34 @@ static SWEndpoint *_sharedEndpoint = nil;
     //FIX make sure connect doesnt get called too often
     //IP Change logic
     
+    self.audioSessionObserver = [SWAudioSessionObserver new];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector: @selector(handleEnteredForeground:) name: @"SWEndPointWakeUp" object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector: @selector(handleEnteredForeground:) name: UIApplicationWillEnterForegroundNotification object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector: @selector(handleEnteredBackground:) name: UIApplicationDidEnterBackgroundNotification object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector: @selector(handleApplicationWillTeminate:) name:UIApplicationWillTerminateNotification object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector: @selector(handleApplicationWillResignActiveNotification:) name:UIApplicationWillResignActiveNotification object:nil];
+    
+    return self;
+}
+
+-(void) configureCallCenterMonitoring {
+    //Если есть внешняя функция определения звонков, здесь следить не нужно
+    if (self.endpointConfiguration.areOtherCallsBlock) {
+        return;
+    }
     __weak typeof(self) weakSelf = self;
     
-    //пишут, что инициализированный не в главном потоке, криво возвращает список звонков
+    //пишут, что инициализированный не в главном потоке криво возвращает список звонков
     dispatch_async(dispatch_get_main_queue(), ^{
+        //Если не первый вызов
+        if (weakSelf.callCenter) {
+            return;
+        }
         weakSelf.callCenter = [[CTCallCenter alloc] init];
         
         [_callCenter setCallEventHandler:^(CTCall *call) {
@@ -380,20 +404,6 @@ static SWEndpoint *_sharedEndpoint = nil;
         slf2->_areOtherCalls = ([[slf2.callCenter currentCalls] count] > 0);
         NSLog(@"<--check other calls--> setting areOtherCalls: %@", slf2->_areOtherCalls ? @"true" : @"false");
     });
-    
-    self.audioSessionObserver = [SWAudioSessionObserver new];
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self selector: @selector(handleEnteredForeground:) name: @"SWEndPointWakeUp" object:nil];
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self selector: @selector(handleEnteredForeground:) name: UIApplicationWillEnterForegroundNotification object:nil];
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self selector: @selector(handleEnteredBackground:) name: UIApplicationDidEnterBackgroundNotification object:nil];
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self selector: @selector(handleApplicationWillTeminate:) name:UIApplicationWillTerminateNotification object:nil];
-    
-    [[NSNotificationCenter defaultCenter] addObserver:self selector: @selector(handleApplicationWillResignActiveNotification:) name:UIApplicationWillResignActiveNotification object:nil];
-    
-    return self;
 }
 
 -(void)dealloc {
@@ -639,6 +649,8 @@ static SWEndpoint *_sharedEndpoint = nil;
 
 -(void) configureWithCompletion: (void(^)(NSError *error))handler {
     self.endpointIteration++;
+    
+    [self configureCallCenterMonitoring];
     
     pj_status_t status;
     
@@ -962,6 +974,8 @@ void logCallback (int level, const char *data, int len) {
     
 #warning experiment
     [self registerSipThread:[NSThread mainThread]];
+    
+    [SWCall closeSoundTrack:nil];
     
     if (handler) {
         handler(nil);
@@ -1304,15 +1318,7 @@ static void SWOnRegStarted(pjsua_acc_id acc_id, pj_bool_t renew) {
 static void SWOnIncomingCall(pjsua_acc_id acc_id, pjsua_call_id call_id, pjsip_rx_data *rdata) {
     SWEndpoint *endpoint = [SWEndpoint sharedEndpoint];
     dispatch_async(dispatch_get_main_queue(), ^{
-        CTCallCenter *callCenter = [[CTCallCenter alloc] init];
-        NSSet<CTCall*> *currentCalls = [callCenter currentCalls];
-        BOOL areOtherCalls = [currentCalls count] > 0;
-        
-        NSLog(@"<--areOtherCalls--> areOtherCalls: %@", areOtherCalls ? @"true" : @"false");
-        
-        endpoint->_areOtherCalls = areOtherCalls;
-        
-        if(areOtherCalls) {
+        if([endpoint areOtherCalls]) {
             [[[endpoint firstAccount] lookupCall:call_id] hangupOnReason:SWCallReasonLocalBusy withCompletion:nil];
         }
     });
@@ -2957,6 +2963,9 @@ static void SWOnTyping (pjsua_call_id call_id, const pj_str_t *from, const pj_st
 }
 
 - (BOOL)areOtherCalls {
+    if (self.endpointConfiguration.areOtherCallsBlock) {
+        return self.endpointConfiguration.areOtherCallsBlock();
+    }
     NSLog(@"<--check other calls--> areOtherCalls: %@", _areOtherCalls ? @"true" : @"false");
     return _areOtherCalls;
 }

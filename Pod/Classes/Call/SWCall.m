@@ -16,6 +16,7 @@
 #import <AVFoundation/AVFoundation.h>
 #import "SWMutableCall.h"
 #import "SWAccountConfiguration.h"
+#import "SWEndpointConfiguration.h"
 #import "SWThreadManager.h"
 #import "EWFileLogger.h"
 #import <pjsua-lib/pjsua_internal.h>
@@ -693,7 +694,7 @@
 
 -(void)answer:(void(^)(NSError *error))handler {
     
-    if ((!self.callkitAreHandlingAudioSession) && (@available(iOS 10.0, *))) {
+    if ((!self.callkitAreHandlingAudioSession) && (@available(iOS 10.0, *)) && SWEndpoint.sharedEndpoint.endpointConfiguration.callKitCanHandleAudioSession) {
         self.answerHandler = handler;
         return;
     }
@@ -1368,6 +1369,8 @@
         [audioSession setPreferredSampleRate:44100 error:&error];
         
         [audioSession setMode:sessionMode error:&error];
+        
+        NSLog(@"<--callkitTest-->audiosesion callStateChanged: %d", self.callState);
         
         NSLog(@"<--swcall-->audioSession: %@ speaker value:%@", audioSession, speaker ? @"true" : @"false");
         //[audioSession setCategory:sessionCategory error:&error];

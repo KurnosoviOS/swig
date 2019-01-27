@@ -44,7 +44,8 @@
     
     _transportConfigurations = [NSArray new];
     _ringtones = [NSMutableDictionary new];
-        
+    _callKitCanHandleAudioSession = YES;
+    
     return self;
 }
 

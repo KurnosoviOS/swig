@@ -130,4 +130,6 @@ typedef NS_ENUM(NSInteger, SWCallReason) {
 
 -(void)updateOverrideSpeaker;
 
++ (BOOL) callKitCanHandleAudioSession;
+
 @end
