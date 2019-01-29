@@ -1370,8 +1370,6 @@
         
         [audioSession setMode:sessionMode error:&error];
         
-        NSLog(@"<--callkitTest-->audiosesion callStateChanged: %d", self.callState);
-        
         NSLog(@"<--swcall-->audioSession: %@ speaker value:%@", audioSession, speaker ? @"true" : @"false");
         //[audioSession setCategory:sessionCategory error:&error];
         if (speaker) {
