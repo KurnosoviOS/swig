@@ -1251,7 +1251,7 @@
         BOOL isOnlyBuiltinInput = [SWCall isOnlyBuiltinInput];
         
         /*
-#ifdef DEBUG
+#ifdef EWTEST
 #warning test
         pjsua_conf_adjust_rx_level(0, 1.0);
 #else

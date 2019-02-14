@@ -27,12 +27,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#ifdef DEBUG
-#warning test
 #import <pjsua-lib/pjsua_internal.h>
-#else
-#error test
-#endif
 
 #define kRegTimeout 60 * 60 * 24 // 600
 
@@ -179,14 +174,7 @@ void * refToSelf;
     
     
     int accountId = (int)self.accountId;
-    
-#ifdef DEBUG
-#warning test
-    auto acc_cnt = pjsua_var.acc_cnt;
-    auto acc = pjsua_var.acc;
-#else
-#error test
-#endif
+        
     status = pjsua_acc_add(&acc_cfg, PJ_TRUE, &accountId);
     
     if (status != PJ_SUCCESS) {
