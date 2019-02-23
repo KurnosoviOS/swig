@@ -2337,10 +2337,28 @@ static void SWOnTyping (pjsua_call_id call_id, const pj_str_t *from, const pj_st
     
     NSString *serverAddress = [NSString stringWithFormat:@"%@:%d", [NSString stringWithPJString:refer_sip_uri->host], refer_sip_uri->port];
     
-    [self onReferFrom:[NSString stringWithPJString:from->user] server:serverAddress forAccount:acc_id ipV6:ipv6Enabled callId:[NSString stringWithPJString:data->msg_info.cid->id] cSeq:0];
+    [self innerOnReferFrom:[NSString stringWithPJString:from->user] server:serverAddress forAccount:acc_id ipV6:ipv6Enabled callId:[NSString stringWithPJString:data->msg_info.cid->id] cSeq:0];
 }
 
+
+
 - (void) onReferFrom: (NSString *) abonent server: (NSString *)voiceUrl forAccount: (int)acc_id ipV6: (BOOL) ipv6Enabled callId: (NSString *)callId cSeq: (int)cSeq {
+    
+    SWThreadManager *thrManager = [SWEndpoint sharedEndpoint].threadFactory;
+    NSThread *regThread = [thrManager getRegistrationThread];
+    
+    if([NSThread currentThread] != regThread) {
+        [thrManager runBlock:^{
+            [self innerOnReferFrom:abonent server:voiceUrl forAccount:acc_id ipV6:ipv6Enabled callId:callId cSeq:cSeq];
+        } onThread:regThread wait:NO];
+        return;
+    }
+    else {
+        [self innerOnReferFrom:abonent server:voiceUrl forAccount:acc_id ipV6:ipv6Enabled callId:callId cSeq:cSeq];
+    }
+}
+
+- (void) innerOnReferFrom: (NSString *) abonent server: (NSString *)voiceUrl forAccount: (int)acc_id ipV6: (BOOL) ipv6Enabled callId: (NSString *)callId cSeq: (int)cSeq {
     
     pj_status_t    status;
     
