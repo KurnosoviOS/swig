@@ -176,6 +176,7 @@ void * refToSelf;
     int accountId = (int)self.accountId;
         
     status = pjsua_acc_add(&acc_cfg, PJ_TRUE, &accountId);
+    NSLog(@"<--SWIG-->pjsua_acc_add completed status:%d", status);
     
     if (status != PJ_SUCCESS) {
         
@@ -776,7 +777,13 @@ void * refToSelf;
             return;
         }
         
-        NSString *uri = [SWUriFormatter sipUriWithPhone:URI fromAccount:self toGSM:isGSM];
+        NSString *gsmPostfix = @"";
+        
+        if (isGSM) {
+            gsmPostfix = @";user=phone";
+        }
+        
+        NSString *uri = [NSString stringWithFormat:@"<sips:%@@%@%@>",URI,self.accountConfiguration.domain,gsmPostfix]; //[SWUriFormatter sipUriWithPhone:URI fromAccount:self toGSM:isGSM];
         pj_str_t pjuri = [uri pjString];
         
         SWCall *call = [SWCall callBeforeSipForAccountId:self.accountId inBound:NO withVideo:withVideo forUri: uri isGsm:isGSM withCallId:generatedCallId];

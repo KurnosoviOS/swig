@@ -1363,13 +1363,22 @@ static void SWOnCallState(pjsua_call_id call_id, pjsip_event *e) {
     SWAccount *account;
     SWCall *call;
     //Найдем аккаунт, в котором есть звонок с нужным идентификатором
-    for (SWAccount *acc in endpoint.accounts) {
-        call = [acc lookupCall:call_id];
-        if (call != nil) {
-            account = acc;
-            break;
+    /*
+    NSArray *acs = [endpoint.accounts copy];
+    
+    if (acs) {
+        for (SWAccount *acc in acs) {
+            call = [acc lookupCall:call_id];
+            if (call != nil) {
+                account = acc;
+                break;
+            }
         }
     }
+     */
+    
+    account = [endpoint firstAccount];
+    call = [account lookupCall:call_id];
     
     if (account) {
         if (call) {
