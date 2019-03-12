@@ -549,7 +549,7 @@ static SWEndpoint *_sharedEndpoint = nil;
     UIApplication *application = (UIApplication *)notification.object;
     
     [self.threadFactory runBlockOnRegThread:^{
-        [application setApplicationIconBadgeNumber:0];
+        //[application setApplicationIconBadgeNumber:0];
         //TODO hangup all calls
         //TODO remove all accounts
         //TODO close all transports
