@@ -31,7 +31,7 @@ Pod::Spec.new do |s|
   s.ios.vendored_libraries = 'Pod/openfec/lib/*.a', 'Pod/pjsip/pjsip-lib/*.a'
 
   s.dependency 'libextobjc', '~> 0.4'
-  s.dependency 'CocoaLumberjack', '2.0.0-rc'
+  # s.dependency 'CocoaLumberjack', '2.0.0-rc'
   s.dependency 'FCUUID', '~> 1.1'
 
   s.frameworks = 'QuartzCore', 'UIKit', 'CoreVideo', 'CoreMedia', 'CoreGraphics', 'OpenGLES'
