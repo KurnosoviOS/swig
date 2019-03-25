@@ -9,15 +9,15 @@
 #ifndef Swig_Logger_h
 #define Swig_Logger_h
 
-#import <CocoaLumberjack/CocoaLumberjack.h>
+//#import <CocoaLumberjack/CocoaLumberjack.h>
 
 #undef LOG_LEVEL_DEF
 #define LOG_LEVEL_DEF myLibLogLevel
 
 #ifdef DEBUG
-__unused static const int myLibLogLevel = DDLogLevelDebug;
+//__unused static const int myLibLogLevel = DDLogLevelDebug;
 #else
-__unused static const int myLibLogLevel = DDLogLevelOff;
+//__unused static const int myLibLogLevel = DDLogLevelOff;
 #endif
 
 #endif

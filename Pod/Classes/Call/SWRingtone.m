@@ -51,7 +51,7 @@
     _audioPlayer.numberOfLoops = -1;
     
     if (error) {
-        DDLogDebug(@"%@", [error description]);
+        
     }
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector: @selector(handleEnteredBackground:) name: UIApplicationDidEnterBackgroundNotification object:nil];

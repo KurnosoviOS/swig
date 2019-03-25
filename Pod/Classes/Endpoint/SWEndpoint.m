@@ -288,15 +288,6 @@ static SWEndpoint *_sharedEndpoint = nil;
     
     [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
     
-    [DDLog addLogger:[DDASLLogger sharedInstance]];
-    [DDLog addLogger:[DDTTYLogger sharedInstance]];
-    
-    DDFileLogger *fileLogger = [[DDFileLogger alloc] init];
-    fileLogger.rollingFrequency = 0;
-    fileLogger.maximumFileSize = 0;
-    
-    [DDLog addLogger:fileLogger];
-    
     _accounts = [[NSMutableArray alloc] init];
     
     //Здесь pjsua ещё не запущен, регистрировать нет смысла!
@@ -415,7 +406,7 @@ static SWEndpoint *_sharedEndpoint = nil;
     
     
     [self reset:^(NSError *error) {
-        if (error) DDLogDebug(@"%@", [error description]);
+        
     }];
 }
 
