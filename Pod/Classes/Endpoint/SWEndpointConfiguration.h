@@ -32,6 +32,7 @@
 @property (nonatomic, copy, nullable) SWRingtoneDescription* (^getRingtoneBlock)(NSInteger reason, SWCall *call);
 @property (nonatomic, assign) BOOL callKitCanHandleAudioSession;
 @property (nonatomic, copy, nullable) BOOL (^areOtherCallsBlock)();
+@property (nonatomic, copy, nullable) void (^logBlock)(NSString *prefix, const char *file, int lineNumber, const char *funcName, NSString *msg);
 
 +(instancetype)configurationWithTransportConfigurations:(NSArray *)transportConfigurations;
 

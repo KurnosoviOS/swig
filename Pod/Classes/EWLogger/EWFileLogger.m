@@ -8,6 +8,8 @@
 #import "EWFileLogger.h"
 
 #import "SWAccount.h"
+#import "SWEndpoint.h"
+#import "SWEndpointConfiguration.h"
 
 @implementation EWFileLogger
 
@@ -17,21 +19,23 @@ static NSDateFormatter *ewLogDateFormat;
 static unsigned long long _logFileSize = 1024*1024*100;
 
 void _Log(NSString *prefix, const char *file, int lineNumber, const char *funcName, NSString *format,...) {
+    va_list ap;
+    va_start (ap, format);
+    
+    format = [format stringByAppendingString:@"\n"];
+    NSString *msg = [[NSString alloc] initWithFormat:format arguments:ap];
+    va_end (ap);
+    
+    if ([SWEndpoint sharedEndpoint].endpointConfiguration.logBlock != nil) {
+        [SWEndpoint sharedEndpoint].endpointConfiguration.logBlock(prefix, file, lineNumber, funcName, msg);
+    }
+}
+
+void _OldLog(NSString *prefix, const char *file, int lineNumber, const char *funcName, NSString *msg) {
     if (EWFileLogger.noLogging) {
         return;
     }
     
-    va_list ap;
-    va_start (ap, format);
-    
-    if (ewLogDateFormat == nil) {
-        ewLogDateFormat = [[NSDateFormatter alloc] init];
-        [ewLogDateFormat setDateFormat:@"dd.MM HH:mm:ss.SSS"];
-    }
-    
-    format = [format stringByAppendingString:@"\n"];
-    NSString *msg = [[NSString alloc] initWithFormat:[NSString stringWithFormat:@"(%@ thread: %@)%@",[ewLogDateFormat stringFromDate: [NSDate date]], [NSThread currentThread],format] arguments:ap];
-    va_end (ap);
     fprintf(stderr,"%s%50s:%3d - %s",[prefix UTF8String], funcName, lineNumber, [msg UTF8String]);
     
     if(EWFileLogger.loggingToFile) {
