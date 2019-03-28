@@ -79,7 +79,8 @@ typedef void (^SWErrorBlock) (NSUInteger status);
 
 @property (nonatomic, strong, readonly) SWEndpointConfiguration *endpointConfiguration;
 //@property (nonatomic, readonly) pj_pool_t *pjPool;
-@property (nonatomic, strong, readonly) NSArray *accounts;
+//@property (nonatomic, strong, readonly) NSArray *accounts;
+@property (nonatomic, strong) SWAccount *account;
 @property (nonatomic, strong) SWRingtone *ringtone;
 @property (nonatomic, readonly) BOOL areOtherCalls;
 

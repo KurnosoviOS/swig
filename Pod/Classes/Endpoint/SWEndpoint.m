@@ -288,7 +288,7 @@ static SWEndpoint *_sharedEndpoint = nil;
     
     [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
     
-    _accounts = [[NSMutableArray alloc] init];
+    //_accounts = [[NSMutableArray alloc] init];
     
     //Здесь pjsua ещё не запущен, регистрировать нет смысла!
     //[self registerThread];
@@ -511,11 +511,11 @@ static SWEndpoint *_sharedEndpoint = nil;
     //    }];
     
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        for (int i = 0; i < [self.accounts count]; ++i) {
+        //for (int i = 0; i < [self.accounts count]; ++i) {
             
-            SWAccount *account = [self.accounts objectAtIndex:i];
-            if (account.firstCall) continue;
-            
+        SWAccount *account = self.account;
+        //if (account.firstCall) continue;
+        if (!account.firstCall) {
             dispatch_semaphore_t semaphone = dispatch_semaphore_create(0);
             
             //            @weakify(account);
@@ -545,9 +545,9 @@ static SWEndpoint *_sharedEndpoint = nil;
         //TODO remove all accounts
         //TODO close all transports
         //TODO reset endpoint
-        for (int i = 0; i < [self.accounts count]; ++i) {
+        //for (int i = 0; i < [self.accounts count]; ++i) {
             
-            SWAccount *account = [self.accounts objectAtIndex:i];
+            SWAccount *account = self.account;
             
             dispatch_semaphore_t semaphone = dispatch_semaphore_create(0);
             
@@ -561,13 +561,14 @@ static SWEndpoint *_sharedEndpoint = nil;
             }];
             
             dispatch_semaphore_wait(semaphone, DISPATCH_TIME_FOREVER);
-        }
+        //}
         
-        NSMutableArray *mutableAccounts = [self.accounts mutableCopy];
+        //NSMutableArray *mutableAccounts = [self.accounts mutableCopy];
         
-        [mutableAccounts removeAllObjects];
+        //[mutableAccounts removeAllObjects];
         
-        self.accounts = mutableAccounts;
+        //self.accounts = mutableAccounts;
+        //self.account = nil;
         
         pj_status_t status = pjsua_destroy();
         
@@ -983,19 +984,19 @@ void logCallback (int level, const char *data, int len) {
     
     //TODO shutdown agent correctly. stop all calls, destroy all accounts
     
-    for (SWAccount *account in self.accounts) {
+    //for (SWAccount *account in self.accounts) {
+    SWAccount *account = self.account;
+    [account endAllCalls];
         
-        [account endAllCalls];
+    dispatch_semaphore_t sema = dispatch_semaphore_create(0);
         
-        dispatch_semaphore_t sema = dispatch_semaphore_create(0);
+    [account disconnect:^(NSError *error) {
+        dispatch_semaphore_signal(sema);
+        [self removeAccount:account];
+    }];
         
-        [account disconnect:^(NSError *error) {
-            dispatch_semaphore_signal(sema);
-            [self removeAccount:account];
-        }];
-        
-        dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
-    }
+    dispatch_semaphore_wait(sema, DISPATCH_TIME_FOREVER);
+    //}
     
 #warning надо формировать ошибку
     if (handler) {
@@ -1053,19 +1054,21 @@ void logCallback (int level, const char *data, int len) {
         
     [[SWEndpoint sharedEndpoint] configure:self.endpointConfiguration completionHandler:^(NSError *error) {
         
-        if(self.accounts.count == 0) {
-            handler(nil);
-            return;
-        }
+        if (self.account == nil) { handler(nil); return; }
+//        if(self.accounts.count == 0) {
+//            handler(nil);
+//            return;
+//        }
         
-        for (int i = 0; i < self.accounts.count; i++) {
-            SWAccount *account = self.accounts[i];
+        //for (int i = 0; i < self.accounts.count; i++) {
+            SWAccount *account = self.account;
             [account configure:account.accountConfiguration completionHandler:^(NSError *error) {
-                if ((i == self.accounts.count - 1) && (handler != nil)) {
-                    handler(nil);
-                }
+//                if ((i == self.accounts.count - 1) && (handler != nil)) {
+//                    handler(nil);
+//                }
+                if (handler != nil) handler(nil);
             }];
-        }
+        //}
     }];
 }
 
@@ -1077,56 +1080,60 @@ void logCallback (int level, const char *data, int len) {
 
 -(void)addAccount:(SWAccount *)account {
     
-    if (![self lookupAccount:account.accountId]) {
-        
-        NSMutableArray *mutableArray = [self.accounts mutableCopy];
-        [mutableArray addObject:account];
-        
-        self.accounts = mutableArray;
-    }
+//    if (![self lookupAccount:account.accountId]) {
+//
+//        NSMutableArray *mutableArray = [self.accounts mutableCopy];
+//        [mutableArray addObject:account];
+//
+//        self.accounts = mutableArray;
+//    }
+    self.account = account;
 }
 
 -(void)removeAccount:(SWAccount *)account {
     
-    if ([self lookupAccount:account.accountId]) {
-        
-        NSMutableArray *mutableArray = [self.accounts mutableCopy];
-        [mutableArray removeObject:account];
-        
-        self.accounts = mutableArray;
-    }
+//    if ([self lookupAccount:account.accountId]) {
+//
+//        NSMutableArray *mutableArray = [self.accounts mutableCopy];
+//        [mutableArray removeObject:account];
+//
+//        self.accounts = mutableArray;
+//    }
+    //self.account = nil;
 }
 
 -(SWAccount *)lookupAccount:(NSInteger)accountId {
+    if (self.account.accountId == accountId) return self.account;
+    return nil;
     
-    NSUInteger accountIndex = [self.accounts indexOfObjectPassingTest:^BOOL(id obj, NSUInteger idx, BOOL *stop) {
-        
-        SWAccount *account = (SWAccount *)obj;
-        
-        if (account.accountId == accountId && account.accountId != PJSUA_INVALID_ID) {
-            return YES;
-        }
-        
-        return NO;
-    }];
-    
-    if (accountIndex != NSNotFound) {
-        return [self.accounts objectAtIndex:accountIndex]; //TODO add more management
-    }
-    
-    else {
-        return nil;
-    }
+//    NSUInteger accountIndex = [self.accounts indexOfObjectPassingTest:^BOOL(id obj, NSUInteger idx, BOOL *stop) {
+//
+//        SWAccount *account = (SWAccount *)obj;
+//
+//        if (account.accountId == accountId && account.accountId != PJSUA_INVALID_ID) {
+//            return YES;
+//        }
+//
+//        return NO;
+//    }];
+//
+//    if (accountIndex != NSNotFound) {
+//        return [self.accounts objectAtIndex:accountIndex]; //TODO add more management
+//    }
+//
+//    else {
+//        return nil;
+//    }
 }
 -(SWAccount *)firstAccount {
-    
-    if (self.accounts.count > 0) {
-        return self.accounts[0];
-    }
-    
-    else {
-        return nil;
-    }
+    return self.account;
+//    if (self.accounts.count > 0) {
+//        return self.accounts[0];
+//    }
+//
+//    else {
+//        return nil;
+//    }
 }
 
 
@@ -1748,10 +1755,10 @@ static void SWOnTyping (pjsua_call_id call_id, const pj_str_t *from, const pj_st
 #pragma Setters/Getters
 
 -(void)setAccounts:(NSArray *)accounts {
-    
-    [self willChangeValueForKey:@"accounts"];
-    _accounts = accounts;
-    [self didChangeValueForKey:@"accounts"];
+    if (accounts.count > 0) self.account = accounts[0];
+//    [self willChangeValueForKey:@"accounts"];
+//    _accounts = accounts;
+//    [self didChangeValueForKey:@"accounts"];
 }
 
 - (void) replaceTxCallIdForData: (pjsip_tx_data *)tdata {
