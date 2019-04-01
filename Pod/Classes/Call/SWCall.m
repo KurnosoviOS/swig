@@ -1013,44 +1013,47 @@
 }
 
 - (void) disableVideoCaptureDevice {
-    unsigned count = pjsua_vid_dev_count();
-    
-    if (count == 0) {
-        return;
-    }
-    
-    pjmedia_vid_dev_info vdi;
-    pj_status_t status;
-    
-    pjmedia_vid_dev_index currentDev = PJMEDIA_NO_VID_DEVICE;
-    
-    //Найдём все активные видеоустройства
-    for (pjmedia_vid_dev_index i=0; i<count; ++i) {
-        status = pjsua_vid_dev_get_info(i, &vdi);
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        unsigned count = pjsua_vid_dev_count();
         
-        if ((status == PJ_SUCCESS) && (vdi.dir == PJMEDIA_DIR_CAPTURE)) {
-            //Если дошли до колорбаров, настоящие камеры кончились
-            if([[[NSString stringWithCString:vdi.name encoding:NSASCIIStringEncoding] lowercaseString] containsString:@"colorbar"]) {
-                break;
-            }
+        if (count == 0) {
+            return;
+        }
+        
+        pjmedia_vid_dev_info vdi;
+        pj_status_t status;
+        
+        pjmedia_vid_dev_index currentDev = PJMEDIA_NO_VID_DEVICE;
+        
+        //Найдём все активные видеоустройства
+        for (pjmedia_vid_dev_index i=0; i<count; ++i) {
+            status = pjsua_vid_dev_get_info(i, &vdi);
             
-            if(pjsua_vid_dev_is_active (vdi.id)) {
-                currentDev = vdi.id;
-                
-                //Отключаем захват превью и его окно
-                pjsua_vid_win_id wid;
-                wid = pjsua_vid_preview_get_win(currentDev);
-                if (wid != PJSUA_INVALID_ID) {
-                    pjsua_vid_win_set_show(wid, PJ_FALSE);
+            if ((status == PJ_SUCCESS) && (vdi.dir == PJMEDIA_DIR_CAPTURE)) {
+                //Если дошли до колорбаров, настоящие камеры кончились
+                if([[[NSString stringWithCString:vdi.name encoding:NSASCIIStringEncoding] lowercaseString] containsString:@"colorbar"]) {
+                    break;
                 }
                 
-                pjsua_vid_preview_stop(currentDev);
+                if(pjsua_vid_dev_is_active (vdi.id)) {
+                    currentDev = vdi.id;
+                    
+                    //Отключаем захват превью и его окно
+                    pjsua_vid_win_id wid;
+                    wid = pjsua_vid_preview_get_win(currentDev);
+                    if (wid != PJSUA_INVALID_ID) {
+                        pjsua_vid_win_set_show(wid, PJ_FALSE);
+                    }
+                    
+                    pjsua_vid_preview_stop(currentDev);
+                }
             }
         }
-    }
+        
+        self.currentVideoCaptureDevice = PJMEDIA_NO_VID_DEVICE;
+        self.videoPreviewView = nil;
+    });
     
-    self.currentVideoCaptureDevice = PJMEDIA_NO_VID_DEVICE;
-    self.videoPreviewView = nil;
 }
 
 - (void) setVideoCaptureDevice: (int) devId {
@@ -1059,6 +1062,10 @@
     
 #warning experiment Похоже, код ниже требует главного потока. Иначе потом будет bad_access
     dispatch_async(dispatch_get_main_queue(), ^{
+        if(account.calls.count == 0) {
+            return;
+        }
+        
         [account configureVideoCodecForDevice: devId];
         
         pjsua_call_vid_strm_op_param param;
