@@ -49,6 +49,7 @@
     NSTimeInterval _spendTime;
     BOOL _isGsm;
     BOOL _callkitAreHandlingAudioSession;
+    NSDate *_videoStartedDate;
 }
 
 -(instancetype)init {
@@ -587,6 +588,7 @@
 
 - (void) changeVideoWindowWithSize: (CGSize) size {
     self.videoSize = size;
+    self->_videoStartedDate = [NSDate date];
     
     [self enableVideoWindow];
 }
@@ -964,7 +966,7 @@
 - (void) changeVideoCaptureDevice {
     unsigned count = pjsua_vid_dev_count();
     
-    if ((count == 0) || (self.callState != SWCallStateConnected)) {
+    if ((count == 0) || (self.callState != SWCallStateConnected) || (self->_videoStartedDate == nil) || ([[self->_videoStartedDate dateByAddingTimeInterval:0.5] compare:[NSDate date]] == NSOrderedDescending)) {
         return;
     }
     
@@ -1013,55 +1015,57 @@
 }
 
 - (void) disableVideoCaptureDevice {
-    dispatch_sync(dispatch_get_main_queue(), ^{
-        unsigned count = pjsua_vid_dev_count();
+    SWAccount *account = [self getAccount];
+    unsigned count = pjsua_vid_dev_count();
+    
+    if ((count == 0) || (account.calls.count == 0)) {
+        return;
+    }
+    
+    pjmedia_vid_dev_info vdi;
+    pj_status_t status;
+    
+    pjmedia_vid_dev_index currentDev = PJMEDIA_NO_VID_DEVICE;
+    
+    //Найдём все активные видеоустройства
+    for (pjmedia_vid_dev_index i=0; i<count; ++i) {
+        status = pjsua_vid_dev_get_info(i, &vdi);
         
-        if (count == 0) {
-            return;
-        }
-        
-        pjmedia_vid_dev_info vdi;
-        pj_status_t status;
-        
-        pjmedia_vid_dev_index currentDev = PJMEDIA_NO_VID_DEVICE;
-        
-        //Найдём все активные видеоустройства
-        for (pjmedia_vid_dev_index i=0; i<count; ++i) {
-            status = pjsua_vid_dev_get_info(i, &vdi);
+        if ((status == PJ_SUCCESS) && (vdi.dir == PJMEDIA_DIR_CAPTURE)) {
+            //Если дошли до колорбаров, настоящие камеры кончились
+            if([[[NSString stringWithCString:vdi.name encoding:NSASCIIStringEncoding] lowercaseString] containsString:@"colorbar"]) {
+                break;
+            }
             
-            if ((status == PJ_SUCCESS) && (vdi.dir == PJMEDIA_DIR_CAPTURE)) {
-                //Если дошли до колорбаров, настоящие камеры кончились
-                if([[[NSString stringWithCString:vdi.name encoding:NSASCIIStringEncoding] lowercaseString] containsString:@"colorbar"]) {
-                    break;
+            if(pjsua_vid_dev_is_active (vdi.id)) {
+                currentDev = vdi.id;
+                
+                //Отключаем захват превью и его окно
+                pjsua_vid_win_id wid;
+                wid = pjsua_vid_preview_get_win(currentDev);
+                if (wid != PJSUA_INVALID_ID) {
+                    pjsua_vid_win_set_show(wid, PJ_FALSE);
                 }
                 
-                if(pjsua_vid_dev_is_active (vdi.id)) {
-                    currentDev = vdi.id;
-                    
-                    //Отключаем захват превью и его окно
-                    pjsua_vid_win_id wid;
-                    wid = pjsua_vid_preview_get_win(currentDev);
-                    if (wid != PJSUA_INVALID_ID) {
-                        pjsua_vid_win_set_show(wid, PJ_FALSE);
-                    }
-                    
-                    pjsua_vid_preview_stop(currentDev);
-                }
+                pjsua_vid_preview_stop(currentDev);
             }
         }
-        
-        self.currentVideoCaptureDevice = PJMEDIA_NO_VID_DEVICE;
-        self.videoPreviewView = nil;
-    });
+    }
+    
+    self.currentVideoCaptureDevice = PJMEDIA_NO_VID_DEVICE;
+    self.videoPreviewView = nil;
     
 }
 
 - (void) setVideoCaptureDevice: (int) devId {
-    SWAccount *account = [self getAccount];
     __weak typeof(self) weakSelf = self;
     
-#warning experiment Похоже, код ниже требует главного потока. Иначе потом будет bad_access
-    dispatch_async(dispatch_get_main_queue(), ^{
+    SWThreadManager *thrManager = [SWEndpoint sharedEndpoint].threadFactory;
+    
+    NSThread *callThread = [thrManager getCallManagementThread];
+    
+    [thrManager runBlock:^{
+        SWAccount *account = [self getAccount];
         if(account.calls.count == 0) {
             return;
         }
@@ -1107,14 +1111,18 @@
 #warning игнорируется переданная высота. Может быть, использовать как ограничения?
             size.h = (int)weakSelf.videoPreviewSize.width / aspect;
             
-            pjsua_vid_win_set_size(wnd, &size);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                pjsua_vid_win_set_size(wnd, &size);
+            });
         }
         else {
-            pjsua_vid_win_set_show(wnd, PJ_FALSE);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                pjsua_vid_win_set_show(wnd, PJ_FALSE);
+            });
         }
         
         weakSelf.videoPreviewView = (__bridge UIView *)windowInfo.hwnd.info.ios.window;
-    });
+    } onThread:callThread wait:NO];
     
 }
 
