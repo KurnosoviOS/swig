@@ -460,7 +460,6 @@
             [self.ringback stop];
             [endpoint.ringtone stop];
             
-            [self disableVideoCaptureDevice];
             
             _spendTime = [[NSDate date] timeIntervalSinceDate:self.dateStartSpeaking];
             
@@ -488,6 +487,8 @@
                 self.callState = SWCallStateDisconnected;
                 [self updateOverrideSpeaker];
             }
+            
+            [self disableVideoCaptureDevice];
         } break;
     }
     
@@ -630,7 +631,7 @@
             self.currentVideoCaptureDevice = PJMEDIA_VID_DEFAULT_CAPTURE_DEV;
         }
         
-        [self setVideoCaptureDevice:self.currentVideoCaptureDevice];
+        [self setVideoCaptureDevice:self.currentVideoCaptureDevice isInit:YES];
         
         SWAccount *account = [[SWEndpoint sharedEndpoint] lookupAccount:self.accountId];
         
@@ -1011,10 +1012,11 @@
      }
      */
     
-    [self setVideoCaptureDevice:nextDev];
+    [self setVideoCaptureDevice:nextDev isInit:NO];
 }
 
 - (void) disableVideoCaptureDevice {
+    self->_videoStartedDate = [NSDate dateWithTimeIntervalSinceNow:100];
     SWAccount *account = [self getAccount];
     unsigned count = pjsua_vid_dev_count();
     
@@ -1057,16 +1059,16 @@
     
 }
 
-- (void) setVideoCaptureDevice: (int) devId {
+- (void) setVideoCaptureDevice: (int) devId isInit: (BOOL) isInit {
     __weak typeof(self) weakSelf = self;
     
-    SWThreadManager *thrManager = [SWEndpoint sharedEndpoint].threadFactory;
-    
-    NSThread *callThread = [thrManager getCallManagementThread];
-    
-    [thrManager runBlock:^{
+    dispatch_async(dispatch_get_main_queue(), ^{
         SWAccount *account = [self getAccount];
         if(account.calls.count == 0) {
+            return;
+        }
+        
+        if (((account.calls.count == 0) || (self.callState != SWCallStateConnected) || (self->_videoStartedDate == nil) || ([[self->_videoStartedDate dateByAddingTimeInterval:0.5] compare:[NSDate date]] == NSOrderedDescending)) && (!isInit)) {
             return;
         }
         
@@ -1088,6 +1090,9 @@
         prvParam.wnd_flags = PJMEDIA_VID_DEV_WND_BORDER |
         PJMEDIA_VID_DEV_WND_RESIZABLE;
         
+        if (((account.calls.count == 0) || (self.callState != SWCallStateConnected) || (self->_videoStartedDate == nil) || ([[self->_videoStartedDate dateByAddingTimeInterval:0.5] compare:[NSDate date]] == NSOrderedDescending)) && (!isInit)) {
+            return;
+        }
         pjsua_vid_preview_start(devId,&prvParam);
         
         pjsua_vid_win_id wnd = pjsua_vid_preview_get_win(devId);
@@ -1111,18 +1116,21 @@
 #warning игнорируется переданная высота. Может быть, использовать как ограничения?
             size.h = (int)weakSelf.videoPreviewSize.width / aspect;
             
-            dispatch_async(dispatch_get_main_queue(), ^{
-                pjsua_vid_win_set_size(wnd, &size);
-            });
+            if (((account.calls.count == 0) || (self.callState != SWCallStateConnected) || (self->_videoStartedDate == nil) || ([[self->_videoStartedDate dateByAddingTimeInterval:0.5] compare:[NSDate date]] == NSOrderedDescending)) && (!isInit)) {
+                return;
+            }
+            pjsua_vid_win_set_size(wnd, &size);
         }
         else {
-            dispatch_async(dispatch_get_main_queue(), ^{
-                pjsua_vid_win_set_show(wnd, PJ_FALSE);
-            });
+            if (((account.calls.count == 0) || (self.callState != SWCallStateConnected) || (self->_videoStartedDate == nil) || ([[self->_videoStartedDate dateByAddingTimeInterval:0.5] compare:[NSDate date]] == NSOrderedDescending)) && (!isInit)) {
+                return;
+            }
+            pjsua_vid_win_set_show(wnd, PJ_FALSE);
         }
         
         weakSelf.videoPreviewView = (__bridge UIView *)windowInfo.hwnd.info.ios.window;
-    } onThread:callThread wait:NO];
+    });
+    
     
 }
 
