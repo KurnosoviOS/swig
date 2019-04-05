@@ -414,7 +414,6 @@ static SWEndpoint *_sharedEndpoint = nil;
 
 - (void) handleEnteredForeground: (NSNotification *)notification {
     NSLog(@"<--starting--> handleEnteredForeground %@", _callCenter.currentCalls);
-    
     //Этим свойством отсекаем лишнюю реакцию на подвисший ответ REGISTER, обработанный после перезапуска приложения
     self.regRequestWasSent = NO;
     //    [self.firstAccount setPresenseStatusOnline:SWPresenseStateOnline completionHandler:^(NSError *error) {
@@ -448,8 +447,9 @@ static SWEndpoint *_sharedEndpoint = nil;
         }
     });
      */
+    SWAccount *account = [SWEndpoint sharedEndpoint].firstAccount;
     
-    if (![SWEndpoint sharedEndpoint].firstAccount.firstCall) {
+    if ((account != nil) && (account.firstCall == nil) && (!account.accountConfiguration.noRegister)) {
         
         dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0);
         
@@ -515,7 +515,7 @@ static SWEndpoint *_sharedEndpoint = nil;
             
         SWAccount *account = self.account;
         //if (account.firstCall) continue;
-        if (!account.firstCall) {
+        if ((account != nil) && (account.firstCall == nil) && (!account.accountConfiguration.noRegister)) {
             dispatch_semaphore_t semaphone = dispatch_semaphore_create(0);
             
             //            @weakify(account);
